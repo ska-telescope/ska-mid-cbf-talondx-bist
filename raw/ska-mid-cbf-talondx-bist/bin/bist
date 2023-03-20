@@ -1,21 +1,24 @@
 #!/bin/sh
 
-#this script should be placed in the path (/bin) 
+# INFO: This script should be placed in the path (/bin) 
+#
+# The script is responsible for the following actions from HPS:
+# - Start the BIST systemd service
+# - Verify the BIST systemd service has started
+# - Verify that the files are placed at the correct location
+# - Stop the BIST service before it is executed on bootup
+# - Modify/Show the start-up delay of the BIST sytemd service
+# - Print the results of the BIST to console
+# - Run the BIST again
+# - Verify the python packages that are needed are preinstalled
 
-#things it needs to do via command line options
-#start the systemd service from HPS
-#verify the systemd service has started from HPS
-#verify that the files are placed at the correct location from HPS (how would it know the location?????)
-#stop the bist service before it is executed on bootup from HPS
-#modify the delay of the sytemd service if needed
-#print the results of the bist to console (needs to know the location of the output file????)
-#run the bist again
-#verify the python packages that are needed are preinstalled?????? (where to get the list from)
-
+# path of the BIST source files
 BIST_SRC_PATH="/home/root/packages"
+# path of the BIST systemd service
 BIST_SERVICE_PATH="/etc/systemd/system"
-
+# path of the BIST bitstream archive
 BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
+# path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
 
 start_bist_service() {
@@ -55,11 +58,12 @@ run_bist() {
 }
 
 get_bist_results() {
-    #cat or print the results of the bist
+    #print the results of the bist
     return 0
 }
 
 modify_bist_start_delay() {
+    echo "setting the BIST start-up delay to ${1} seconds"
     #modify the start of the service by X seconds
 }
 
@@ -68,8 +72,8 @@ usage() {
     echo -e "-s \tStart the BIST systemd service"
     echo -e "-k \tKill the BIST systemd service"
     echo -e "-r \tRun the BIST"
-    echo -e "-m [time]\tModify the BIST systemd start delay time by [time]"
-    echo -e "-h \tDisplay the the help message"
+    echo -e "-m <time in seconds>\tModify the BIST systemd start delay time by [time]"
+    echo -e "-h \tDisplay the help message"
     echo -e "-v \tVerify the BIST files are installed correctly"
 }
 
@@ -82,6 +86,8 @@ while getopts ":hskrm:" arg; do
         r)
             ;;
         m)
+            start_delay=${OPTARG}
+            modify_bist_start_delay $start_delay
             ;;
         h)
             usage
