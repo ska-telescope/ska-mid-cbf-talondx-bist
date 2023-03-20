@@ -1,0 +1,93 @@
+#!/bin/sh
+
+#this script should be placed in the path (/bin) 
+
+#things it needs to do via command line options
+#start the systemd service from HPS
+#verify the systemd service has started from HPS
+#verify that the files are placed at the correct location from HPS (how would it know the location?????)
+#stop the bist service before it is executed on bootup from HPS
+#modify the delay of the sytemd service if needed
+#print the results of the bist to console (needs to know the location of the output file????)
+#run the bist again
+#verify the python packages that are needed are preinstalled?????? (where to get the list from)
+
+BIST_SRC_PATH="/home/root/packages"
+BIST_SERVICE_PATH="/etc/systemd/system"
+
+BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
+BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
+
+start_bist_service() {
+    echo "Enabling BIST service via systemd"
+    systemctl enable $BIST_SERVICE_PATH/bist.timer
+    return 0
+}
+
+stop_bist_service() {
+    echo "Stopping BIST service via systemd"
+    systemctl disable $BIST_SERVICE_PATH/bist.timer
+    return 0
+}
+
+program_bist_bitstream() {
+    echo "Programming the BIST bitstream..."
+    bs_core=`tar --wildcards --get -vf $BIST_ARCHIVE *.rbf`
+    dtb=`tar --wildcards --get -vf $BIST_ARCHIVE *.dtb`
+    
+    rmdir $BIST_BITSTREAM_PATH/*
+    mkdir $BIST_BITSTREAM_PATH/base
+    echo $BIST_ARCHIVE/$dtb > $BIST_BITSTREAM_PATH/base/path
+    dmesg | tail -n 3
+    return 0
+}
+
+execute_bist() {
+    json=`tar --wildcards --get -vf $BIST_ARCHIVE *.json`
+    python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_SRC_PATH/talon_dx-tdc_base.json $BIST_SRC_PATH/tdc.ipmap
+    return 0
+}
+
+run_bist() {
+    program_bist_bitstream
+    execute_bist
+    return 0
+}
+
+get_bist_results() {
+    #cat or print the results of the bist
+    return 0
+}
+
+modify_bist_start_delay() {
+    #modify the start of the service by X seconds
+}
+
+usage() {
+    echo "usage:"
+    echo -e "-s \tStart the BIST systemd service"
+    echo -e "-k \tKill the BIST systemd service"
+    echo -e "-r \tRun the BIST"
+    echo -e "-m [time]\tModify the BIST systemd start delay time by [time]"
+    echo -e "-h \tDisplay the the help message"
+    echo -e "-v \tVerify the BIST files are installed correctly"
+}
+
+while getopts ":hskrm:" arg; do
+    case $arg in
+        s)
+            ;;
+        k)
+            ;;
+        r)
+            ;;
+        m)
+            ;;
+        h)
+            usage
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done

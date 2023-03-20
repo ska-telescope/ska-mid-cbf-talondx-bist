@@ -1,0 +1,8 @@
+[Unit]
+Description=Timer for the BIST service
+
+[Timer]
+OnBootSec=30seconds
+
+[Install]
+WantedBy=timers.target
