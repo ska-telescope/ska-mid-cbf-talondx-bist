@@ -10,7 +10,7 @@
 # - Modify/Show the start-up delay of the BIST sytemd service
 # - Print the results of the BIST to console
 # - Run the BIST again
-# - Verify the python packages that are needed are preinstalled
+# - Verify the python packages that are needed are pre-installed
 
 # path of the BIST source files
 BIST_SRC_PATH="/home/root/packages"
@@ -21,16 +21,36 @@ BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
 # path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
 
+verify_bist_service_files() {
+    # verify the required systemd service files are placed at right location
+}
+
+verify_bist_bitstream_files() {
+    # verify the required bitstream files are placed at right location
+}
+
+verify_bist_files(){
+    # verify all bist files
+}
+
+verify_bist_service() {
+    #returns 0 if the service has been started
+    local status=$(systemctl is-active --quiet $BIST_SERVICE_PATH/bist.timer)
+    return $status;
+}
+
 start_bist_service() {
     echo "Enabling BIST service via systemd"
     systemctl enable $BIST_SERVICE_PATH/bist.timer
-    return 0
+    local status=verify_bist_service
+    return $status
 }
 
 stop_bist_service() {
     echo "Stopping BIST service via systemd"
     systemctl disable $BIST_SERVICE_PATH/bist.timer
-    return 0
+    local status=verify_bist_service
+    return $status
 }
 
 program_bist_bitstream() {
@@ -42,6 +62,7 @@ program_bist_bitstream() {
     mkdir $BIST_BITSTREAM_PATH/base
     echo $BIST_ARCHIVE/$dtb > $BIST_BITSTREAM_PATH/base/path
     dmesg | tail -n 3
+    
     return 0
 }
 
@@ -77,19 +98,33 @@ usage() {
     echo -e "-v \tVerify the BIST files are installed correctly"
 }
 
-while getopts ":hskrm:" arg; do
+while getopts ":hskrm:v" arg; do
     case $arg in
         s)
+            status=start_bist_service
+            if [ $status ] then;
+                echo "Error starting the BIST service - $status"
+            fi
             ;;
         k)
+            status=stop_bist_service
+            if [ $status ] then;
+                echo "Error killing the BIST service - $status"
+            fi
             ;;
         r)
+            run_bist
             ;;
         m)
             start_delay=${OPTARG}
             modify_bist_start_delay $start_delay
             ;;
+        v)
+            ;;
         h)
+            usage
+            ;;
+        :)
             usage
             ;;
         *)
