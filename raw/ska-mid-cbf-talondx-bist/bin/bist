@@ -56,28 +56,36 @@ verify_bist_bitstream_files() {
 verify_bist_files() {
     # verify all bist files dependencies
     local verbosity=$1
+    local res=0
     verify_bist_service_files $verbosity
+    if [ $? -gt 0 ]; then
+        res=1
+    fi
     verify_bist_bitstream_files $verbosity
+    if [ $? -gt 0 ]; then
+        res=1
+    fi
+    return $res
 }
 
 verify_bist_service() {
     #returns 0 if the service has been started
-    local status=$(systemctl is-active --quiet $BIST_SERVICE_PATH/bist.timer)
-    return $status;
+    systemctl is-active --quiet $BIST_SERVICE_PATH/bist.timer
+    return $?
 }
 
 start_bist_service() {
     echo "Enabling BIST service via systemd"
     systemctl enable $BIST_SERVICE_PATH/bist.timer
-    local status=verify_bist_service
-    return $status
+    verify_bist_service
+    return $?
 }
 
 stop_bist_service() {
     echo "Stopping BIST service via systemd"
     systemctl disable $BIST_SERVICE_PATH/bist.timer
-    local status=verify_bist_service
-    return $status
+    verify_bist_service
+    return $?
 }
 
 program_bist_bitstream() {
@@ -100,6 +108,7 @@ execute_bist() {
 }
 
 run_bist() {
+    #TODO check if the fpga is programmed and the files are there
     program_bist_bitstream
     execute_bist
     return 0
@@ -107,12 +116,25 @@ run_bist() {
 
 get_bist_results() {
     #print the results of the bist
+    #TODO
     return 0
 }
 
+get_bist_start_delay() { 
+    verify_bist_service_files true
+    if [ $? -eq 0 ]; then
+        local val=$(cat $BIST_SERVICE_PATH/*.timer | grep seconds)
+        echo $val
+    fi
+}
+
 modify_bist_start_delay() {
-    echo "setting the BIST start-up delay to ${1} seconds"
     #modify the start of the service by X seconds
+    verify_bist_service_files true
+    if [ $? -eq 0 ]; then
+        echo "setting the BIST start-up delay to ${1} seconds"
+        #TODO
+    fi
 }
 
 usage() {
@@ -128,14 +150,14 @@ usage() {
 while getopts ":hskrm:v" arg; do
     case $arg in
         s)
-            status=start_bist_service
-            if [ $status ]; then
+            start_bist_service
+            if [ $? -gt 0 ]; then
                 echo "Error starting the BIST service - $status"
             fi
             ;;
         k)
-            status=stop_bist_service
-            if [ $status ]; then
+            stop_bist_service
+            if [ $? -gt 0 ]; then
                 echo "Error killing the BIST service - $status"
             fi
             ;;
@@ -144,7 +166,13 @@ while getopts ":hskrm:v" arg; do
             ;;
         m)
             start_delay=${OPTARG}
-            modify_bist_start_delay $start_delay
+            get_bist_start_delay
+            if [[ "$start_delay" =~ [^0-9] ]]; then
+                echo "delay has to be a positive integer in seconds"
+            else
+                modify_bist_start_delay $start_delay
+                get_bist_start_delay
+            fi
             ;;
         v)
             verify_bist_files true
