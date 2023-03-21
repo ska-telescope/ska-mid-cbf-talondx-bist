@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# INFO: This script should be placed in the path (/bin) 
-#
 # The script is responsible for the following actions from HPS:
 # - Start the BIST systemd service
 # - Verify the BIST systemd service has started
@@ -14,23 +12,52 @@
 
 # path of the BIST source files
 BIST_SRC_PATH="/home/root/packages"
+# list of BIST source files
+BIST_SRC_FILES="*.tar.gz *.ipmap *.json"
 # path of the BIST systemd service
 BIST_SERVICE_PATH="/etc/systemd/system"
+# list of systemd service files
+BIST_SERVICE_FILES="bist.service bist.timer"
 # path of the BIST bitstream archive
 BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
 # path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
 
 verify_bist_service_files() {
-    # verify the required systemd service files are placed at right location
+    # verify that the required systemd service files are placed at right location
+    local res=0
+    local verbosity=$1
+    for file in $BIST_SERVICE_FILES; do
+        if ! [ -f $BIST_SERVICE_PATH/$file ]; then
+            if [ $verbosity ]; then
+                echo "$BIST_SERVICE_PATH/$file not found"
+            fi
+            res=1
+        fi
+    done
+    return $res
 }
 
 verify_bist_bitstream_files() {
-    # verify the required bitstream files are placed at right location
+    # verify that the required bitstream files are placed at right location
+    local res=0
+    local verbosity=$1
+    for file in $BIST_SRC_FILES; do
+        if ! [ -f $BIST_SRC_PATH/$file ]; then
+            if [ $verbosity ]; then
+                echo "$BIST_SRC_PATH/$file not found"
+            fi
+            res=1
+        fi
+    done
+    return $res
 }
 
-verify_bist_files(){
-    # verify all bist files
+verify_bist_files() {
+    # verify all bist files dependencies
+    local verbosity=$1
+    verify_bist_service_files $verbosity
+    verify_bist_bitstream_files $verbosity
 }
 
 verify_bist_service() {
@@ -62,7 +89,7 @@ program_bist_bitstream() {
     mkdir $BIST_BITSTREAM_PATH/base
     echo $BIST_ARCHIVE/$dtb > $BIST_BITSTREAM_PATH/base/path
     dmesg | tail -n 3
-    
+
     return 0
 }
 
@@ -102,13 +129,13 @@ while getopts ":hskrm:v" arg; do
     case $arg in
         s)
             status=start_bist_service
-            if [ $status ] then;
+            if [ $status ]; then
                 echo "Error starting the BIST service - $status"
             fi
             ;;
         k)
             status=stop_bist_service
-            if [ $status ] then;
+            if [ $status ]; then
                 echo "Error killing the BIST service - $status"
             fi
             ;;
@@ -120,6 +147,7 @@ while getopts ":hskrm:v" arg; do
             modify_bist_start_delay $start_delay
             ;;
         v)
+            verify_bist_files true
             ;;
         h)
             usage
