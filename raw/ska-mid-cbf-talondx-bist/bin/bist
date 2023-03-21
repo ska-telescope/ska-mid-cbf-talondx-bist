@@ -69,22 +69,19 @@ verify_bist_files() {
 }
 
 verify_bist_service() {
-    #returns 0 if the service has been started
-    systemctl is-active --quiet $BIST_SERVICE_PATH/bist.timer
-    return $?
+    local res=$(systemctl is-active $BIST_SERVICE_PATH/bist.timer)
+    echo $res
 }
 
 start_bist_service() {
-    echo "Enabling BIST service via systemd"
+    echo "Activating BIST service via systemd"
     systemctl enable $BIST_SERVICE_PATH/bist.timer
-    verify_bist_service
     return $?
 }
 
 stop_bist_service() {
     echo "Stopping BIST service via systemd"
     systemctl disable $BIST_SERVICE_PATH/bist.timer
-    verify_bist_service
     return $?
 }
 
@@ -115,7 +112,7 @@ run_bist() {
 }
 
 get_bist_results() {
-    #print the results of the bist
+    #print the results of the BIST
     #TODO
     return 0
 }
@@ -123,7 +120,7 @@ get_bist_results() {
 get_bist_start_delay() { 
     verify_bist_service_files true
     if [ $? -eq 0 ]; then
-        local val=$(cat $BIST_SERVICE_PATH/*.timer | grep seconds)
+        local val=$(cat $BIST_SERVICE_PATH/bist.timer | grep seconds)
         echo $val
     fi
 }
@@ -138,16 +135,17 @@ modify_bist_start_delay() {
 }
 
 usage() {
-    echo "usage:"
-    echo -e "-s \tStart the BIST systemd service"
-    echo -e "-k \tKill the BIST systemd service"
-    echo -e "-r \tRun the BIST"
-    echo -e "-m <time in seconds>\tModify the BIST systemd start delay time by [time]"
-    echo -e "-h \tDisplay the help message"
-    echo -e "-v \tVerify the BIST files are installed correctly"
+    echo "Usage:"
+    echo -e "-s             Start the BIST systemd service"
+    echo -e "-k             Kill the BIST systemd service, aborting the BIST"
+    echo -e "-r             Run the BIST"
+    echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
+    echo -e "-t             Show the current BIST systemd start delay time"
+    echo -e "-h             Display the help message"
+    echo -e "-v             Verify the BIST files are installed correctly"
 }
 
-while getopts ":hskrm:v" arg; do
+while getopts ":hskrm:vt" arg; do
     case $arg in
         s)
             start_bist_service
@@ -164,10 +162,12 @@ while getopts ":hskrm:v" arg; do
         r)
             run_bist
             ;;
+        t)
+            get_bist_start_delay
+            ;;
         m)
             start_delay=${OPTARG}
-            get_bist_start_delay
-            if [[ "$start_delay" =~ [^0-9] ]]; then
+            if [[ "$start_delay" =~ [^0-9] ]]; then #check if the argument passed is only digits
                 echo "delay has to be a positive integer in seconds"
             else
                 modify_bist_start_delay $start_delay
@@ -188,3 +188,6 @@ while getopts ":hskrm:v" arg; do
             ;;
     esac
 done
+
+# In case no options were passed
+if [ $OPTIND -eq 1 ]; then usage; fi
