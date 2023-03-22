@@ -3,15 +3,15 @@
 # The script is responsible for the following actions from HPS:
 # - Start the BIST systemd service
 # - Verify the BIST systemd service has started
-# - Verify that the files are placed at the correct location
+# - TODO: Verify that the files are placed at the correct location
 # - Stop the BIST service before it is executed on bootup
 # - Modify/Show the start-up delay of the BIST sytemd service
-# - Print the results of the BIST to console
+# - TODO: Print the results of the BIST to console
 # - Run the BIST again
-# - Verify the python packages that are needed are pre-installed
+# - TODO: Verify the python packages that are needed are pre-installed
 
 # path of the BIST source files
-BIST_SRC_PATH="/home/root/packages"
+BIST_SRC_PATH="/home/root/packages/bist"
 # list of BIST source files
 BIST_SRC_FILES="*.tar.gz *.ipmap *.json"
 # path of the BIST systemd service
@@ -30,7 +30,7 @@ verify_bist_service_files() {
     for file in $BIST_SERVICE_FILES; do
         if ! [ -f $BIST_SERVICE_PATH/$file ]; then
             if [ $verbosity ]; then
-                echo "$BIST_SERVICE_PATH/$file not found"
+                echo "$BIST_SERVICE_PATH/$file not found at $BIST_SERVICE_PATH"
             fi
             res=1
         fi
@@ -45,7 +45,7 @@ verify_bist_bitstream_files() {
     for file in $BIST_SRC_FILES; do
         if ! [ -f $BIST_SRC_PATH/$file ]; then
             if [ $verbosity ]; then
-                echo "$BIST_SRC_PATH/$file not found"
+                echo "$BIST_SRC_PATH/$file not found at $BIST_SRC_PATH"
             fi
             res=1
         fi
@@ -81,7 +81,7 @@ start_bist_service() {
 
 stop_bist_service() {
     echo "Stopping BIST service via systemd"
-    systemctl disable $BIST_SERVICE_PATH/bist.timer
+    systemctl disable --now $BIST_SERVICE_PATH/bist.timer #disable and stop immediately
     return $?
 }
 
@@ -105,7 +105,7 @@ execute_bist() {
 }
 
 run_bist() {
-    #TODO check if the fpga is programmed and the files are there
+    #TODO check if the files are there
     program_bist_bitstream
     execute_bist
     return 0
@@ -126,18 +126,17 @@ get_bist_start_delay() {
 }
 
 modify_bist_start_delay() {
-    #modify the start of the service by X seconds
     verify_bist_service_files true
     if [ $? -eq 0 ]; then
-        echo "setting the BIST start-up delay to ${1} seconds"
-        #TODO
+        echo "Setting the BIST start-up delay to ${1} seconds"
+        sed -i '/OnBootSec=/c\OnBootSec=${1}seconds' $BIST_SERVICE_PATH/bist.timer
     fi
 }
 
 usage() {
     echo "Usage:"
     echo -e "-s             Start the BIST systemd service"
-    echo -e "-k             Kill the BIST systemd service, aborting the BIST"
+    echo -e "-k             Kill the BIST systemd service immediately, aborting the BIST"
     echo -e "-r             Run the BIST"
     echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
     echo -e "-t             Show the current BIST systemd start delay time"
