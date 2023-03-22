@@ -129,7 +129,7 @@ modify_bist_start_delay() {
     verify_bist_service_files true
     if [ $? -eq 0 ]; then
         echo "Setting the BIST start-up delay to ${1} seconds"
-        sed -i '/OnBootSec=/c\OnBootSec=${1}seconds' $BIST_SERVICE_PATH/bist.timer
+        sed -i "/OnBootSec=/c\OnBootSec=${1}seconds" $BIST_SERVICE_PATH/bist.timer
     fi
 }
 
