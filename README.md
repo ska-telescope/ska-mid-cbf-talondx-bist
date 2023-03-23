@@ -58,4 +58,6 @@ The `-r` option runs the bist. Note that the systemd `bist.service` uses this sa
 - [ ] Display the BIST output results
 - [ ] Verify the python dependencies are installed on the target
 - [ ] Allow override of the installation path/binary/packages via the `install.sh` and a `CONFIG_FILE`
-- [ ] Punblish the results of the BIST to influxdb periodically 
+- [ ] Punblish the results of the BIST to influxdb periodically
+- [ ] Add the official .ipmap
+- [ ] Add the official bitstream archive.tar.gz

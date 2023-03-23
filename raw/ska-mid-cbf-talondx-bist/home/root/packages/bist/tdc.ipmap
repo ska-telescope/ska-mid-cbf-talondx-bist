@@ -1,0 +1,59 @@
+# Map the FPGA heirarchy of register sets to simplier software names.
+
+TOP|E_BASE|E_PERSONA|E_FSP|E_CORRELATOR|E_CORE|E_LTA|B_PROG|E_LTA_PROG                                              => correlator_lta
+TOP|E_BASE|E_PERSONA|E_FSP|E_CORRELATOR|GEN_CHAN_AVERAGE_RAM[{col}]|E_CHAN_AVERAGE_RAM_BRIDGE                       => correlator_mta@col{col}
+TOP|E_BASE|E_PERSONA|E_FSP|E_VIS_PKTS|E_HOST_LOOKUP|E_PROG_REG                                                      => vis_host_lut_stage_one
+TOP|E_BASE|E_PERSONA|E_FSP|E_VIS_PKTS|E_SPEAD_VISIBILITY_PACKETISER|E_ITEM_PKT|E_SUBARRAY_SPEAD_PROG                => subarray_spead_descriptors
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_16K_CHAN|E_AVMM_BRIDGE                                     => fsp_{ant}_ic_ch16k
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_RDT|E_CSR                                                  => fsp_{ant}_resampler_delay_tracker@csr
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_RDT|G_POL[{pol}]|E_RDT|E_CONTROL|E_DELAY_MODEL_RAM_BRIDGE  => fsp_{ant}_resampler_delay_tracker@first_order_delay_models_pol{pol}
+TOP|E_BASE|E_PERSONA|E_FSP|G_CORNER_TURNER_{ct}|E_CT|E_CT|E_CSR                                                     => corner_turner@{ct}
+TOP|E_BASE|E_PERSONA|E_FS_TRANSPORT|E_CIRCUIT_SWITCH|E_CSR                                                          => circuit_switch
+TOP|E_BASE|E_PERSONA|E_FS_TRANSPORT|G_RX[{ant}]|E_STREAM_REPAIR|E_REG_BANK                                          => packet_stream_repair_{ant}
+TOP|E_BASE|E_PERSONA|E_LED_CTRL|E_CSR                                                                               => led_ctrl
+TOP|E_BASE|E_PERSONA|E_SYS_ID|E_CSR                                                                                 => persona_sys_id
+TOP|E_BASE|E_PERSONA|E_VCC|E_PKT_CAP|E_CSR                                                                          => pkt_cap
+TOP|E_BASE|E_PERSONA|E_VCC|E_VCC_CH20|E_AVMM_BRIDGE                                                                 => vcc_ch20
+TOP|E_BASE|E_PERSONA|E_VCC|E_WIB|E_REG_BANK                                                                         => wideband_input_buffer
+TOP|E_BASE|E_PERSONA|E_VIS_TO_ETHERNET|B_REGISTER|E_CSR                                                             => vis@source_host_config
+TOP|E_BASE|E_PERSONA|E_VIS_TO_ETHERNET|E_MAC_IP_UDP_LOOKUP|E_PROG_REG                                               => vis@host_lut_stage_two
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|E_CSR                                                                     => lstv_gen
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|E_RECEIVER_NOISE_GEN_{pol}|E_FIR|E_AVMM_BRIDGE                            => recv_bite_fir_filter_pol{pol}
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|E_RECEIVER_NOISE_GEN_{pol}|E_GAUSSIAN_NOISE|E_CSR                         => recv_gaussian_pol{pol}
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|E_TONE_{pol}|E_REG_BANK                                                   => bite_tone_gen_pol{pol}
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|GEN_SOURCE[{src}]|B_RESAMPLER_DELAY_TRACKER|E_CSR                         => lstv_source_{src}_resampler_delay_tracker@csr
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|GEN_SOURCE[{src}]|B_RESAMPLER_DELAY_TRACKER|E_RDT_POL_{pol}|E_CONTROL|E_DELAY_MODEL_RAM_BRIDGE => lstv_source_{src}_resampler_delay_tracker@first_order_delay_models_pol{pol}
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|GEN_SOURCE[{src}]|E_POLARIZATION_COUPLER|E_REG_BANK                       => lstv_source_{src}_polarization_coupler
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|GEN_SOURCE[{src}]|E_SOURCE_NOISE_GEN_{pol}|E_CSR                          => lstv_source_{src}_gaussian_pol{pol}
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_LSTV|GEN_SOURCE[{src}]|E_SOURCE_NOISE_GEN_{pol}|E_NOISE_SHAPING_FIR|E_FIR_COEFFS_FIFO => lstv_source_{src}_bite_fir_filter2_pol{pol}
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_SPFRX_PACKETIZER|E_REG_BANK                                                    => spfrx_packetizer
+TOP|E_BASE|E_PERSONA|G_BITE|E_BITE|E_REPLAY|E_CSR                                                                   => lstv_replay
+
+TOP|E_BASE|E_PERSONA|G_RDMA|E_RDMA_CAPTURE|G_CHAN[{chan}]|E_RDMA|B_QP_LUT|E_QUEUE_PAIR_PROG                         => rdma_chan{chan}@queue_pair_prog
+TOP|E_BASE|E_PERSONA|G_RDMA|E_RDMA_CAPTURE|G_CHAN[{chan}]|E_RDMA|B_REG|E_SOURCE_HOST_CONFIG                         => rdma_chan{chan}@source_host_config
+
+TOP|E_BASE|E_SLIM_MBO|E_MBO_{mbo}|G_CHANNEL[{chan}]|G_ENABLED|E_SLIM_RX|E_REGISTERS                                 => mbo{mbo}_chan{chan}_rx_slim
+TOP|E_BASE|E_SLIM_MBO|E_MBO_{mbo}|G_CHANNEL[{chan}]|G_ENABLED|E_SLIM_TX|E_REGISTERS                                 => mbo{mbo}_chan{chan}_tx_slim
+
+TOP|E_BASE|E_SYS_ID|E_CSR                                                                                           => base_sys_id
+TOP|E_BASE|E_TALON_ST|E_REG_BANK                                                                                    => talon_status
+
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_PHY                                                               => eth{eth}@phy
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_RX_MAC                                                            => eth{eth}@rx_mac
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_RX_RSFEC                                                          => eth{eth}@rx_rsfec
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_RX_STAT                                                           => eth{eth}@rx_statistics
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_TX_MAC                                                            => eth{eth}@tx_mac
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_TX_RSFEC                                                          => eth{eth}@tx_rsfec
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|B_REGISTERS|E_TX_STAT                                                           => eth{eth}@tx_statistics
+TOP|E_BASE|G_100GBE[{eth}]|E_100GBE|G_QSFP_CTRL|E_QSFP                                                              => eth{eth}@qsfp
+
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_CH16K_HISTOGRAM|E_CSR                                 => fsp_{ant}_post_ch16k_histogram@control
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_CH16K_HISTOGRAM|E_HIST_POL{pol}|E_HISTOGRAM_RESULTS   => fsp_{ant}_post_ch16k_histogram@results_pol{pol}
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_RDT_HISTOGRAM|E_CSR                                   => fsp_{ant}_post_rdt_histogram@control
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_RDT_HISTOGRAM|E_HIST_POL{pol}|E_HISTOGRAM_RESULTS     => fsp_{ant}_post_rdt_histogram@results_pol{pol}
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_VCC_HISTOGRAM|E_CSR                                   => fsp_{ant}_post_vcc_histogram@control
+TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_VCC_HISTOGRAM|E_HIST_POL{pol}|E_HISTOGRAM_RESULTS     => fsp_{ant}_post_vcc_histogram@results_pol{pol}
+TOP|E_BASE|E_PERSONA|E_VCC|E_PRE_VCC_HISTOGRAM|E_CSR                                                                => pre_vcc_histogram@control
+TOP|E_BASE|E_PERSONA|E_VCC|E_PRE_VCC_HISTOGRAM|E_HIST_POL{pol}|E_HISTOGRAM_RESULTS                                  => pre_vcc_histogram@results_pol{pol}
+
+TOP|E_BASE|G_INCLUDE_JTAG|E_JTAG_BLASTER|E_AVMM_BRIDGE                                                              =>
