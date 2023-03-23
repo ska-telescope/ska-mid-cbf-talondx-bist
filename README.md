@@ -6,12 +6,29 @@ This repository holds the Built In Self Test (BIST) for the Talons. It provides 
 ![BIST Deploymeny Architecture](images/bist_arch.jpg)<br>
 Figure 1. BIST Deployment Architecture</div><br>
 
+## How to Install
+
+1. Grab the package from CAR.
+2. Transfer the package to the target device via SCP. 
+   
+    ```scp <bist_archive.tar.gz> root@<taget>:/home/root/packages```
+
+3. Unpack the package at root on the target device. 
+
+    ```tar -xvzf bist_archive.tar.gz -C /```
+
+4. Run `bist -v` to verify the files.
+5. Run `bist -s` to install the BIST systemd service.
+6. Restart the targer device, the BIST will run automatically on boot-up.
+
 ## How to Use
 
-The BIST is depoloyed through the CAR (central Artifect Repository). The package grabbed from CAR mirros the file system of the target talon boards. This has been done to simplify the process of deplyoment, because once the tar.gz package is unpacked at root, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
+The BIST is depoloyed through the CAR (Central Artifact Repository). The package grabbed from CAR mirros the file system of the target talon boards. This has been done to simplify the process of deplyoment, because once the tar.gz package is unpacked at root, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
 
 For example a given package `bist_archive.tar.gz` could be unpacked at root:
->tar -xvzf bist_archive.tar.gz -C /
+```
+tar -xvzf bist_archive.tar.gz -C /
+```
 
 This would place the `bist` script at `/bin`. The user may then call this script to perform various actions.
 
@@ -54,7 +71,7 @@ The `-v` option verifies that the bitstream files and the service files are plac
 
 The `-r` option runs the bist. Note that the systemd `bist.service` uses this same script to run the BIST after the required bootup delay.
 
-### TODOS
+## TODOS
 - [ ] Display the BIST output results
 - [ ] Verify the python dependencies are installed on the target
 - [ ] Allow override of the installation path/binary/packages via the `install.sh` and a `CONFIG_FILE`
