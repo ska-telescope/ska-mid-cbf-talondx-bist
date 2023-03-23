@@ -99,16 +99,20 @@ program_bist_bitstream() {
 }
 
 execute_bist() {
+    #TODO check if the files are there
     json=`tar --wildcards --get -vf $BIST_ARCHIVE *.json`
     python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_SRC_PATH/talon_dx-tdc_base.json $BIST_SRC_PATH/tdc.ipmap
     return 0
 }
 
 run_bist() {
-    #TODO check if the files are there
-    program_bist_bitstream
-    execute_bist
-    return 0
+    verify_bist_bitstream_files true
+    local res=$?
+    if [ $res -eq 0 ]; then
+        program_bist_bitstream
+        execute_bist
+    fi
+    return $res
 }
 
 get_bist_results() {
