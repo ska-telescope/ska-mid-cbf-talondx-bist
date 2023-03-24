@@ -13,7 +13,7 @@
 # path of the BIST source files
 BIST_SRC_PATH="/home/root/packages/bist"
 # list of BIST source files
-BIST_SRC_FILES="*.tar.gz *.ipmap *.json"
+BIST_SRC_FILES="*.tar.gz *.ipmap"
 # path of the BIST systemd service
 BIST_SERVICE_PATH="/etc/systemd/system"
 # list of systemd service files
