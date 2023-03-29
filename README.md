@@ -1,92 +1,80 @@
-# SKA Mid CBF Talondx Bist
+# Intro
 
+This repository holds the Built In Self Test (BIST) for the Talons. It provides the source code to run the BIST, the bitstream to program, and a script that manages the BIST start, stop, and delay on the target system.
 
+<div align="center">
+![BIST Deployment Architecture](images/bist_arch.jpg)<br>
+Figure 1. BIST Deployment Architecture</div><br>
 
-## Getting started
+## How to Install
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+1. Grab the package from CAR.
+2. Transfer the package to the target device via SCP. 
+   
+    ```scp <bist_archive.tar.gz> root@<target>:/home/root/packages```
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+3. Unpack the package at root on the target device. 
 
-## Add your files
+    ```tar -xvzf bist_archive.tar.gz -C /```
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+4. Run `bist -v` to verify the files.
+5. Run `bist -s` to install the BIST systemd service.
+6. Restart the target device, the BIST will run automatically on boot-up.
 
+## How to Use
+
+The BIST is deployed through the CAR (Central Artifact Repository). The package grabbed from CAR mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
+
+For example a given package `bist_archive.tar.gz` could be unpacked at root:
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/ska-telescope/ska-mid-cbf-talondx-bist.git
-git branch -M main
-git push -uf origin main
+tar -xvzf bist_archive.tar.gz -C /
 ```
 
-## Integrate with your tools
+This would place the `bist` script at `/bin`. The user may then call this script to perform various actions.
 
-- [ ] [Set up project integrations](https://gitlab.com/ska-telescope/ska-mid-cbf-talondx-bist/-/settings/integrations)
+### Available Actions
 
-## Collaborate with your team
+The idea is that the BIST will start automatically on each boot-up to run a system diagnostic. However, a small delay is introduced before this service is started in case it is required to stop it from running. This delay is managed by `bist.timer` service and could be modified by the `bist` script.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+The automatic startup is achieved via the systemd service (unit files). The `bist.service` is triggered by `bist.timer`. The user may kill the BIST runner before it is triggered by `bist.timer` via the bist script.
 
-## Test and Deploy
+Run the `bist` script (or `bist -h`) to view the available commands.
 
-Use the built-in continuous integration in GitLab.
+- "-s             Start the BIST systemd service"
+- "-k             Kill the BIST systemd service immediately, aborting the BIST"
+- "-r             Run the BIST"
+- "-m <time>      Modify the BIST systemd start delay time by <time>"
+- "-t             Show the current BIST systemd start delay time"
+- "-h             Display the help message"
+- "-v             Verify the BIST files are installed correctly"
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+The `-s` option installs the BIST runner service in systemd. The user might need to run this command only once per BIST package installation.
 
-***
+The `-k` option kills and stops the BIST runner service. Note that this also prevents the start of the BIST on future bootups, the user may run the `-s` option to reinstall the service.
 
-# Editing this README
+The `-t` option shows the current set BIST start delay.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The `-m` option allows the user to modify the delay from within the target environment.
+For example to set the start delay to 99 seconds after boot:
+```
+bist -m 99
+```
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+The status of a given systemd service could be read by:
+```
+systemctl status bist.timer
+systemctl status bist.service
+journalctl -u bist.timer
+```
 
-## Name
-Choose a self-explaining name for your project.
+The `-v` option verifies that the bitstream files and the service files are placed (unpacked) at the correct location.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+The `-r` option runs the bist. Note that the systemd `bist.service` uses this same script to run the BIST after the required bootup delay.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## TODOS
+- [ ] Display the BIST output results
+- [ ] Verify the python dependencies are installed on the target
+- [ ] Allow override of the installation path/binary/packages via the `install.sh` and a `CONFIG_FILE`
+- [ ] Publish the results of the BIST to influxdb periodically
+- [ ] Add the official .ipmap
+- [ ] Add the official bitstream archive.tar.gz

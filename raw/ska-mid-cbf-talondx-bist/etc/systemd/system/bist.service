@@ -1,0 +1,6 @@
+[Unit]
+Description=Built In Self Test (BIST) unit configuration file
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bist run
