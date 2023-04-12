@@ -85,24 +85,35 @@ stop_bist_service() {
     return $?
 }
 
+extract_archive() {
+    # tar command on the Talon boards is from Busybox and 
+    # has a limited set of command. tar options such as --get and --wildcards 
+    # does not exist.
+    echo "Extracting files from tar to $BIST_SRC_PATH/extract_dir/"
+    # remove the output directory if it exists
+    if [ -d "$BIST_SRC_PATH/extract_dir" ]; then
+        echo "Deleting previous tar file output directory"
+        rm -rf $BIST_SRC_PATH/extract_dir
+    fi
+    mkdir $BIST_SRC_PATH/extract_dir
+    tar -xvzf $BIST_ARCHIVE -C $BIST_SRC_PATH/extract_dir/
+}
+
 program_bist_bitstream() {
     echo "Programming the BIST bitstream..."
-    bs_core=`tar --wildcards --get -vf $BIST_ARCHIVE *.rbf`
-    dtb=`tar --wildcards --get -vf $BIST_ARCHIVE *.dtb`
+    bs_core=$(ls $BIST_SRC_PATH/extract_dir/*.rbf) 
+    dtb=$(ls $BIST_SRC_PATH/extract_dir/*.dtb)
     
     rmdir $BIST_BITSTREAM_PATH/*
     mkdir $BIST_BITSTREAM_PATH/base
     echo $BIST_ARCHIVE/$dtb > $BIST_BITSTREAM_PATH/base/path
-    dmesg | tail -n 3
-
-    return 0
+    dmesg | tail -n 10
 }
 
 execute_bist() {
     #TODO check if the files are there
-    json=`tar --wildcards --get -vf $BIST_ARCHIVE *.json`
+    json=$(ls $BIST_SRC_PATH/extract_dir/*.json)
     python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_SRC_PATH/talon_dx-tdc_base.json $BIST_SRC_PATH/tdc.ipmap
-    return 0
 }
 
 run_bist() {
@@ -144,17 +155,20 @@ usage() {
     echo -e "-r             Run the BIST"
     echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
     echo -e "-t             Show the current BIST systemd start delay time"
+    echo -e "-p             Program the BIST bitstream"
+    echo -e "-x             Extract the tar file at predefined location"
     echo -e "-h             Display the help message"
     echo -e "-v             Verify the BIST files are installed correctly"
 }
 
-while getopts ":hskrm:vt" arg; do
+while getopts ":hskrm:vtpx" arg; do
     case $arg in
         s)
             start_bist_service
             if [ $? -gt 0 ]; then
                 echo "Error starting the BIST service - $status"
             fi
+            extract_archive
             ;;
         k)
             stop_bist_service
@@ -168,6 +182,9 @@ while getopts ":hskrm:vt" arg; do
         t)
             get_bist_start_delay
             ;;
+        x)
+            extract_archive
+            ;;
         m)
             start_delay=${OPTARG}
             if [[ "$start_delay" =~ [^0-9] ]]; then #check if the argument passed is only digits
@@ -179,6 +196,9 @@ while getopts ":hskrm:vt" arg; do
             ;;
         v)
             verify_bist_files true
+            ;;
+        p)
+            program_bist_bitstream
             ;;
         h)
             usage

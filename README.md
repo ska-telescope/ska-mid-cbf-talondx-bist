@@ -19,7 +19,8 @@ Figure 1. BIST Deployment Architecture</div><br>
 
 4. Run `bist -v` to verify the files.
 5. Run `bist -s` to install the BIST systemd service.
-6. Restart the target device, the BIST will run automatically on boot-up.
+6. Run `bist -x` to extract the bitstream tar file.
+7. Restart the target device, the BIST will run automatically on boot-up.
 
 ## How to Use
 
@@ -45,6 +46,8 @@ Run the `bist` script (or `bist -h`) to view the available commands.
 - "-r             Run the BIST"
 - "-m <time>      Modify the BIST systemd start delay time by <time>"
 - "-t             Show the current BIST systemd start delay time"
+- "-p             Program the BIST bitstream"
+- "-x             Extract the tar file at predefined location"
 - "-h             Display the help message"
 - "-v             Verify the BIST files are installed correctly"
 
