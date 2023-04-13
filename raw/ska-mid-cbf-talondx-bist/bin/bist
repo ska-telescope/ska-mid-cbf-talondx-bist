@@ -22,6 +22,8 @@ BIST_SERVICE_FILES="bist.service bist.timer"
 BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
 # path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
+# path og the BIST bitstream package is extracted
+BIST_ARCHIVE_PATH=$BIST_SRC_PATH/extract_dir
 
 verify_bist_service_files() {
     # verify that the required systemd service files are placed at right location
@@ -85,35 +87,49 @@ stop_bist_service() {
     return $?
 }
 
-extract_archive() {
+extract_archive() { 
     # tar command on the Talon boards is from Busybox and 
     # has a limited set of command. tar options such as --get and --wildcards 
     # does not exist.
     echo "Extracting files from tar to $BIST_SRC_PATH/extract_dir/"
     # remove the output directory if it exists
-    if [ -d "$BIST_SRC_PATH/extract_dir" ]; then
+    if [ -d "$BIST_ARCHIVE_PATH" ]; then
         echo "Deleting previous tar file output directory"
-        rm -rf $BIST_SRC_PATH/extract_dir
+        rm -rf $BIST_ARCHIVE_PATH
     fi
-    mkdir $BIST_SRC_PATH/extract_dir
-    tar -xvzf $BIST_ARCHIVE -C $BIST_SRC_PATH/extract_dir/
+    mkdir $BIST_ARCHIVE_PATH
+    tar -xvzf $BIST_ARCHIVE -C $BIST_ARCHIVE_PATH
 }
 
 program_bist_bitstream() {
+
     echo "Programming the BIST bitstream..."
-    bs_core=$(ls $BIST_SRC_PATH/extract_dir/*.rbf) 
-    dtb=$(ls $BIST_SRC_PATH/extract_dir/*.dtb)
-    
-    rmdir $BIST_BITSTREAM_PATH/*
-    mkdir $BIST_BITSTREAM_PATH/base
-    echo $BIST_ARCHIVE/$dtb > $BIST_BITSTREAM_PATH/base/path
-    dmesg | tail -n 10
+    # fetch the files
+    bs_core=$(ls $BIST_ARCHIVE_PATH/*.rbf) 
+    dtb=$(ls $BIST_ARCHIVE_PATH/*.dtb)
+    # sanity check
+    if [ -z "$dtb" ] || [ -z "$bs_core" ]; then
+        echo ".dtb or .rbf file(s) missing. Aborting bitstream programming!"
+    else 
+        rmdir $BIST_BITSTREAM_PATH/*
+        mkdir $BIST_BITSTREAM_PATH/base
+        echo $BIST_ARCHIVE_PATH/$dtb > $BIST_BITSTREAM_PATH/base/path
+        dmesg | tail -n 10
+    fi
 }
 
 execute_bist() {
-    #TODO check if the files are there
+
+    echo "Executing BIST..."
+    # fetch the files
     json=$(ls $BIST_SRC_PATH/extract_dir/*.json)
-    python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_SRC_PATH/talon_dx-tdc_base.json $BIST_SRC_PATH/tdc.ipmap
+    ipmap=$(ls $BIST_SRC_PATH/*ipmap)
+    # sanity check
+    if [ -z "$json" ] || [ -z "$ipmap" ]; then
+        echo "ipmap or json file(s) missing. Aborting BIST execution!"
+    else
+        python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_ARCHIVE_PATH/$json $BIST_SRC_PATH/$ipmap
+    fi
 }
 
 run_bist() {
@@ -127,8 +143,13 @@ run_bist() {
 }
 
 get_bist_results() {
-    #print the results of the BIST
-    #TODO
+    # print the results of the BIST
+    # TODO
+    return 0
+}
+
+publish_bist_results_to_influxdb() {
+    # TODO
     return 0
 }
 
