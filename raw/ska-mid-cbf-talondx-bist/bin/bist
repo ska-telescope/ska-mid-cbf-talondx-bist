@@ -225,7 +225,7 @@ while getopts ":hskrm:vtpx" arg; do
             usage
             ;;
         :)
-            usage
+            echo "Error: -${OPTARG} requires an argument."
             ;;
         *)
             usage
