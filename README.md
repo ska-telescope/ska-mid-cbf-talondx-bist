@@ -9,11 +9,11 @@ Figure 1. BIST Deployment Architecture</div><br>
 ## How to Install
 ### Manual Method
 1. Grab the package from CAR.
-2. Transfer the package to the target device via SCP. 
+2. Transfer the package to the target device via SCP: 
    
     ```scp <bist_archive.tar.gz> root@<target>:/home/root/packages```
 
-3. SSH into the the target device and unpack the package at root on the target device. 
+3. SSH into the the target device and unpack the package at root on the target device: 
 
     ```tar -xvzf bist_archive.tar.gz -C /```
 
@@ -21,8 +21,9 @@ Figure 1. BIST Deployment Architecture</div><br>
 5. On the target device, run `bist -s` to install the BIST systemd service.
 6. On the target device,, run `bist -x` to extract the bitstream tar file.
 7. Restart the target device, the BIST will run automatically on boot-up.
+   
 ### Using the scripts
-You have the following options:
+You have the following options for placing the BIST package onto a board/sd-card:
 - Generate a local package:<br>
     `./scripts/install.sh -n my_bist.tar.gz -g`
 - Download the package from CAR:<br>
@@ -32,9 +33,9 @@ You have the following options:
     - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -s talon1`
 - Install the package if the sd-card is mounted:<br>
     - CAR:  `./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
-    - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -s talon1`
+    - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
 
-You may then run the `bist.sh <flags>` scripts on the target to verify and install the services. 
+User may then run the `bist.sh <flags>` scripts on the target to verify and install the services. 
 ## How to Use
 
 The BIST is deployed through the CAR (Central Artifact Repository). The package grabbed from CAR mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root on a given target talon board, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
