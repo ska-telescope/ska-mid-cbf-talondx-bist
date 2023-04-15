@@ -65,7 +65,7 @@ pingTalon(){
    echo "number_of_ping_packets_received: $number_of_ping_packets_received"
 
    if [ "$number_of_ping_packets_received" == "" ]; then
-        echo "ERROR: Could not determine number_of_ping_packets_received."
+        echo "${RED}ERROR: Could not determine number_of_ping_packets_received.${NC}"
         return "1"
    fi
 
@@ -116,7 +116,7 @@ install_package_mounted(){
             tar -xvzf $LOCAL_PACKAGE_NAME -C $sd_card_mount_path
             exit 0
         else
-            echo -e "{$RED}ERROR, file $LOCAL_PACKAGE_NAME does not exist{NC}"
+            echo -e "${RED}ERROR, file $LOCAL_PACKAGE_NAME does not exist.${NC}"
             exit 1
         fi
 
@@ -179,7 +179,7 @@ while getopts ":hgc:i:s:n:" arg; do
             usage
             ;;
         :)
-            echo -e "ERROR: -${OPTARG} requires an argument."
+            echo -e "${$RED}ERROR: -${OPTARG} requires an argument.${NC}"
             ;;
         *)
             usage
