@@ -7,24 +7,37 @@ This repository holds the Built In Self Test (BIST) for the Talons. It provides 
 Figure 1. BIST Deployment Architecture</div><br>
 
 ## How to Install
-
+### Manual Method
 1. Grab the package from CAR.
 2. Transfer the package to the target device via SCP. 
    
     ```scp <bist_archive.tar.gz> root@<target>:/home/root/packages```
 
-3. Unpack the package at root on the target device. 
+3. SSH into the the target device and unpack the package at root on the target device. 
 
     ```tar -xvzf bist_archive.tar.gz -C /```
 
-4. Run `bist -v` to verify the files.
-5. Run `bist -s` to install the BIST systemd service.
-6. Run `bist -x` to extract the bitstream tar file.
+4. On the target device, Run `bist -v` to verify the files.
+5. On the target device, run `bist -s` to install the BIST systemd service.
+6. On the target device,, run `bist -x` to extract the bitstream tar file.
 7. Restart the target device, the BIST will run automatically on boot-up.
+### Using the scripts
+You have the following options:
+- Generate a local package:<br>
+    `./scripts/install.sh -n my_bist.tar.gz -g`
+- Download the package from CAR:<br>
+    `./scripts/install.sh -c 0.1.0`
+- Install the package over network (SCP & SSH):<br>
+    - CAR:  `./scripts/install.sh -c 0.1.0 -s talon1`
+    - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -s talon1`
+- Install the package if the sd-card is mounted:<br>
+    - CAR:  `./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
+    - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -s talon1`
 
+You may then run the `bist.sh <flags>` scripts on the target to verify and install the services. 
 ## How to Use
 
-The BIST is deployed through the CAR (Central Artifact Repository). The package grabbed from CAR mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
+The BIST is deployed through the CAR (Central Artifact Repository). The package grabbed from CAR mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root on a given target talon board, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
 
 For example a given package `bist_archive.tar.gz` could be unpacked at root:
 ```
@@ -77,7 +90,7 @@ The `-r` option runs the bist. Note that the systemd `bist.service` uses this sa
 ## TODOS
 - [ ] Display the BIST output results
 - [ ] Verify the python dependencies are installed on the target
-- [ ] Allow override of the installation path/binary/packages via the `install.sh` and a `CONFIG_FILE`
+- [x] Install the package using `install.sh` from CAR downloaded package or locally generated package
 - [ ] Publish the results of the BIST to influxdb periodically
 - [ ] Add the official .ipmap
 - [ ] Add the official bitstream archive.tar.gz
