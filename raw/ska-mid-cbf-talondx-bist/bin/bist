@@ -5,15 +5,15 @@
 # - Verify the BIST systemd service has started
 # - TODO: Verify that the files are placed at the correct location
 # - Stop the BIST service before it is executed on bootup
-# - Modify/Show the start-up delay of the BIST sytemd service
-# - TODO: Print the results of the BIST to console
+# - Modify/Show the start-up delay of the BIST systemd service
+# - Print the results of the BIST to console
 # - Run the BIST again
 # - TODO: Verify the python packages that are needed are pre-installed
 
 # path of the BIST source files
 BIST_SRC_PATH="/home/root/packages/bist"
 # list of BIST source files
-BIST_SRC_FILES="*.tar.gz *.ipmap"
+BIST_SRC_FILES="talon_dx-tdc_base-tdc_bist.tar.gz tdc.ipmap"
 # path of the BIST systemd service
 BIST_SERVICE_PATH="/etc/systemd/system"
 # list of systemd service files
@@ -119,7 +119,6 @@ program_bist_bitstream() {
 }
 
 execute_bist() {
-
     echo "Executing BIST..."
     # fetch the files
     json=$(ls $BIST_SRC_PATH/extract_dir/*.json)
@@ -144,13 +143,25 @@ run_bist() {
 
 get_bist_results() {
     # print the results of the BIST
-    # TODO
-    return 0
+    if [ -f $BIST_SRC_PATH/tdc_base_bist_logfile.log ]; then
+        echo $BIST_SRC_PATH/tdc_base_bist_logfile.log
+        return 0
+    else
+        echo "$BIST_SRC_PATH/tdc_base_bist_logfile.log not found"
+        exit 1
+    fi
 }
 
 publish_bist_results_to_influxdb() {
-    # TODO
-    return 0
+    # publish the results to the influxdb. The python script that runs
+    # the BIST is responsible for producing a valid .csv file
+    if [ -f $BIST_SRC_PATH/tdc_base_bist_logfile.csv ]; then
+        echo "Publishing $BIST_SRC_PATH/tdc_base_bist_logfile.csv to influxdb"
+        influx write --bucket bist --file $BIST_SRC_PATH/tdc_base_bist_logfile.csv
+        return 0
+    else 
+        exit 1
+    fi
 }
 
 get_bist_start_delay() { 
@@ -178,11 +189,13 @@ usage() {
     echo -e "-t             Show the current BIST systemd start delay time"
     echo -e "-p             Program the BIST bitstream"
     echo -e "-x             Extract the tar file at predefined location"
+    echo -e "-f             Publish the results (.csv) of the BIST to influxdb"
+    echo -e "-c             Print the results (.log) of the BIST"
     echo -e "-h             Display the help message"
     echo -e "-v             Verify the BIST files are installed correctly"
 }
 
-while getopts ":hskrm:vtpx" arg; do
+while getopts ":hskrm:vtpxfc" arg; do
     case $arg in
         s)
             start_bist_service
@@ -220,6 +233,12 @@ while getopts ":hskrm:vtpx" arg; do
             ;;
         p)
             program_bist_bitstream
+            ;;
+        c)
+            get_bist_results
+            ;;
+        f)
+            publish_bist_results_to_influxdb
             ;;
         h)
             usage

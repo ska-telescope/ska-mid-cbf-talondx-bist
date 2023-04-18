@@ -24,16 +24,14 @@ Figure 1. BIST Deployment Architecture</div><br>
    
 ### Using the scripts
 You have the following options for placing the BIST package onto a board/sd-card:
-- Generate a local package:<br>
-    `./scripts/install.sh -n my_bist.tar.gz -g`
-- Download the package from CAR:<br>
-    `./scripts/install.sh -c 0.1.0`
+- Generate a local package:<br>`./scripts/install.sh -n my_bist.tar.gz -g`
+- Download the package from CAR:<br>`./scripts/install.sh -c 0.1.0`
 - Install the package over network (SCP & SSH):<br>
-    - CAR:  `./scripts/install.sh -c 0.1.0 -s talon1`
-    - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -s talon1`
+    - CAR:<br>`./scripts/install.sh -c 0.1.0 -s talon1`
+    - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -s talon1`
 - Install the package if the sd-card is mounted:<br>
-    - CAR:  `./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
-    - LOCAL:`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
+    - CAR:<br>`./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
+    - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
 
 User may then run the `bist.sh <flags>` scripts on the target to verify and install the services. 
 ## How to Use
@@ -89,9 +87,9 @@ The `-v` option verifies that the bitstream files and the service files are plac
 The `-r` option runs the bist. Note that the systemd `bist.service` uses this same script to run the BIST after the required bootup delay.
 
 ## TODOS
-- [ ] Display the BIST output results
+- [x] Display the BIST output results
 - [ ] Verify the python dependencies are installed on the target
 - [x] Install the package using `install.sh` from CAR downloaded package or locally generated package
-- [ ] Publish the results of the BIST to influxdb periodically
+- [x] Publish the results of the BIST to influxdb periodically
 - [ ] Add the official .ipmap
 - [ ] Add the official bitstream archive.tar.gz

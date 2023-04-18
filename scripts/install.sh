@@ -130,17 +130,20 @@ usage() {
     echo "Usage:
     -g                  generate local package .tar.gz 
     -n <NAME.tar.gz>    set the name of the package to generate or install on target
-    -s <TALON NUMBER>   install the package at target over network (SCP)
+    -s <TALON NUMBER>   install the package on target over network (SCP & SSH)
     -i <MOUNT PATH>     install the package on target when sd-card partition2 is mounted
     -c <CAR VERSION>    download the package from CAR, given the CAR version
     -h                  display usage
     "
 
     echo "\
+    Genenate a local package with a given name and install it:
+    ./scripts/install.sh -n bist_pkg.tar.gz -g -i /mnt/p2
+
     Grab the local package and install it at the mounted path of sd-card:
     ./scripts/install.sh -n bist_package.tar.gz -i /mnt/p2/
 
-    Download the package version 0.1.0 from CAR and install it on talon1 overnetwork:
+    Download the package version 0.1.0 from CAR and install it on talon1 over network:
     ./scripts/install.sh -c 0.1.0 -s talon1
 
     Generate the local package with a given name:
