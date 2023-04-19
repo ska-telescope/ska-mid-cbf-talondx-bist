@@ -8,11 +8,12 @@ REPO_NAME="ska-mid-cbf-talondx-bist"
 # color codes
 RED='\033[0;31m' 
 YELLOW='\033[1;33m'
+GREEN='\033[1;32m'
 NC='\033[0m' # No Color
 
 overwrite_package_name(){
     LOCAL_PACKAGE_NAME=$1
-    echo -e "Overwriting default package name to: ${YELLOW}${LOCAL_PACKAGE_NAME}${NC}"
+    echo -e "${YELLOW}Using package name: ${LOCAL_PACKAGE_NAME}${NC}"
     return 0
 }
 
@@ -20,11 +21,22 @@ generate_local_package(){
     echo "Generating local package..."
     #sanity check warning
     if [ -f $LOCAL_PACKAGE_NAME ]; then
-        echo -e "${RED}Package $LOCAL_PACKAGE_NAME already exists. Overwriting...${NC}"
+        echo -e "${YELLOW}Package $LOCAL_PACKAGE_NAME already exists. Overwriting...${NC}"
     fi
-    # move to folder, generate the package and move back
-    cd ./raw/$REPO_NAME/ && tar -cvzf $LOCAL_PACKAGE_NAME * && mv $LOCAL_PACKAGE_NAME ../../ && cd ../../
-    return 0
+    
+    if [ -d ./raw/$REPO_NAME ]; then
+        # move to folder, generate the package and move back
+        # the --user and --owner makes sure tar does not preserve the owner (GNU tar)
+        cd ./raw/$REPO_NAME/ \
+        && tar -cvzf $LOCAL_PACKAGE_NAME * --owner=0 --group=0 \
+        && mv $LOCAL_PACKAGE_NAME ../../ \
+        && cd ../../
+        echo -e "${GREEN}Package $LOCAL_PACKAGE_NAME generated.${NC}"
+        return 0
+    else
+        echo -e "${RED}ERROR: raw/$REPO_NAME does not exist.${NC}"
+        exit 1
+    fi
 }
 
 get_package_from_car(){
@@ -66,15 +78,15 @@ pingTalon(){
 
    if [ "$number_of_ping_packets_received" == "" ]; then
         echo "${RED}ERROR: Could not determine number_of_ping_packets_received.${NC}"
-        return "1"
+        return 1
    fi
 
    if [ "$number_of_ping_packets_received" -lt "$PING_ECHOES_NEEDED_FOR_SUCCESS" ]; then
         echo "Received $number_of_ping_packets_received/$PING_ATTEMPTS packets. Talon not pingable."
-        return "1"
+        return 1
    else
         echo "Received $number_of_ping_packets_received/$PING_ATTEMPTS packets. Talon pingable."
-        return "0"
+        return 0
    fi
 }
 
@@ -83,18 +95,18 @@ install_package_scp(){
     local talon_board=$1
     pingTalon $talon_board
 
-    if [ $? -ne "0" ]; then
-        echo "$talon_board was unreachable. Aborting programming..."
+    if [ $? -ne 0 ]; then
+        echo "$talon_board was unreachable. Aborting..."
         exit 1
     else
         #sanity check for file
         if [ -f $LOCAL_PACKAGE_NAME ]; then
-            echo "copying file over network and unpacking through ssh"
+            echo "copying file over network through scp and unpacking through ssh"
             #copy the local file over via SCP
             scp $LOCAL_PACKAGE_NAME root@$talon_board:/home/root/packages
             #ssh in and unpack the package at root
-            ssh root@$talon_board -n "tar -xvzf /home/root/packages/$LOCAL_PACKAGE_NAME -C /";
-            exit 0
+            ssh root@$talon_board -n "tar -xvzf /home/root/packages/$LOCAL_PACKAGE_NAME -C /"
+            return 0
         else
             echo -e "${RED}ERROR, file $LOCAL_PACKAGE_NAME does not exist${NC}"
             exit 1
@@ -126,39 +138,80 @@ install_package_mounted(){
     fi
 }
 
+setup_remote_board(){
+
+    local target_talon_board=$1
+    local ret
+
+    echo -e "${YELLOW}Setting up target board...${NC}"
+
+    #attempt to ping the board for sanity
+    pingTalon $target_talon_board
+    if [ $? -ne 0 ]; then
+        echo "$talon_board was unreachable. Aborting..."
+        exit 1
+    fi
+    
+    #ssh into the board and attempt to verify the files using the onboard script
+    ssh root@$target_talon_board -n "bist -v" 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Unable to verify files on the target board: $ret"
+        exit 2
+    fi
+
+    #ssh into the board and setup the bist auto runner
+    ret=$(ssh root@$target_talon_board -n "bist -s" 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "Unable to setup systemd services on the target board: $ret"
+        exit 3
+    fi
+
+    echo -e "${GREEN}Target board setup successful. Retart the target board to finish setup.${NC}"
+    return 0
+}
+
 usage() {
     echo "Usage:
     -g                  generate local package .tar.gz 
     -n <NAME.tar.gz>    set the name of the package to generate or install on target
-    -s <TALON NUMBER>   install the package on target over network (SCP & SSH)
+    -s <TALON BOARD>    install the package on target over network (SCP & SSH)
     -i <MOUNT PATH>     install the package on target when sd-card partition2 is mounted
     -c <CAR VERSION>    download the package from CAR, given the CAR version
+    -b <TALON BOARD>    attempt to setup the remote board with BIST
     -h                  display usage
     "
 
     echo "\
+    End to end setup:
+    ./scripts/install.sh -n bist_pkg.tar.gz -g -s talon1 -b talon1 
+
+    More Examples:
     Genenate a local package with a given name and install it:
     ./scripts/install.sh -n bist_pkg.tar.gz -g -i /mnt/p2
 
     Grab the local package and install it at the mounted path of sd-card:
-    ./scripts/install.sh -n bist_package.tar.gz -i /mnt/p2/
+    ./scripts/install.sh -n bist_pkg.tar.gz -i /mnt/p2/
 
-    Download the package version 0.1.0 from CAR and install it on talon1 over network:
-    ./scripts/install.sh -c 0.1.0 -s talon1
+    Download the package version 0.1.0 from CAR and install it on 192.168.8.1 over network:
+    ./scripts/install.sh -c 0.1.0 -s 192.168.8.1
 
     Generate the local package with a given name:
-    ./scripts/install.sh -n my_file.tar.gz -g
+    ./scripts/install.sh -n bist_pkg.tar.gz -g
 
     Download the package version 0.1.0 from CAR and install it at the mounted path:
     ./scripts/install.sh -c 0.1.0 -i /mnt/p2/
 
     Install a locally generated package to talon1 over network:
-    ./scripts/install.sh -n bist_package.tar.gz -s talon1
+    ./scripts/install.sh -n bist_pkg.tar.gz -s talon1
     "
 }
 
-while getopts ":hgc:i:s:n:" arg; do
+while getopts ":hgc:i:s:n:b:" arg; do
     case $arg in
+        b)
+            talon_board=${OPTARG}
+            setup_remote_board $talon_board
+            ;;
         n)
             pkg_name=${OPTARG}
             overwrite_package_name $pkg_name

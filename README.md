@@ -19,13 +19,15 @@ Figure 1. BIST Deployment Architecture</div><br>
 
 4. On the target device, Run `bist -v` to verify the files.
 5. On the target device, run `bist -s` to install the BIST systemd service.
-6. On the target device,, run `bist -x` to extract the bitstream tar file.
-7. Restart the target device, the BIST will run automatically on boot-up.
+6. Restart the target device, the BIST will run automatically on boot-up.
    
 ### Using the scripts
 You have the following options for placing the BIST package onto a board/sd-card:
-- Generate a local package:<br>`./scripts/install.sh -n my_bist.tar.gz -g`
-- Download the package from CAR:<br>`./scripts/install.sh -c 0.1.0`
+- Install the BIST package on target board and set it up (end to end):<br>
+  `.scripts/install.sh -n my_bist.tar.gz -g -s talon1 -b talon1`<br>
+  `./scripts/install.sh -c 0.1.0 -s talon1 -b talon1 `
+- Generate a local package only:<br>`./scripts/install.sh -n my_bist.tar.gz -g`
+- Download the package from CAR only:<br>`./scripts/install.sh -c 0.1.0`
 - Install the package over network (SCP & SSH):<br>
     - CAR:<br>`./scripts/install.sh -c 0.1.0 -s talon1`
     - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -s talon1`
@@ -33,7 +35,7 @@ You have the following options for placing the BIST package onto a board/sd-card
     - CAR:<br>`./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
     - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
 
-User may then run the `bist.sh <flags>` scripts on the target to verify and install the services. 
+If end-to-end method is not used, users may then run the `bist.sh <flags>` scripts on the target to verify and install the services themselves. 
 ## How to Use
 
 The BIST is deployed through the CAR (Central Artifact Repository). The package grabbed from CAR mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root on a given target talon board, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.

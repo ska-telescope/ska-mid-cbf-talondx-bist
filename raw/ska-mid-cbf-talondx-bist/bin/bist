@@ -60,11 +60,11 @@ verify_bist_files() {
     local verbosity=$1
     local res=0
     verify_bist_service_files $verbosity
-    if [ $? -gt 0 ]; then
+    if [ $? -ne 0 ]; then
         res=1
     fi
     verify_bist_bitstream_files $verbosity
-    if [ $? -gt 0 ]; then
+    if [ $? -ne 0 ]; then
         res=1
     fi
     return $res
@@ -126,6 +126,7 @@ execute_bist() {
     # sanity check
     if [ -z "$json" ] || [ -z "$ipmap" ]; then
         echo "ipmap or json file(s) missing. Aborting BIST execution!"
+        exit 1
     else
         python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_ARCHIVE_PATH/$json $BIST_SRC_PATH/$ipmap
     fi
@@ -177,12 +178,14 @@ modify_bist_start_delay() {
     if [ $? -eq 0 ]; then
         echo "Setting the BIST start-up delay to ${1} seconds"
         sed -i "/OnBootSec=/c\OnBootSec=${1}seconds" $BIST_SERVICE_PATH/bist.timer
+    else
+        exit 1
     fi
 }
 
 usage() {
     echo "Usage:"
-    echo -e "-s             Start the BIST systemd service"
+    echo -e "-s             Start the BIST systemd service and exract tar file"
     echo -e "-k             Kill the BIST systemd service immediately, aborting the BIST"
     echo -e "-r             Run the BIST"
     echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
@@ -199,15 +202,18 @@ while getopts ":hskrm:vtpxfc" arg; do
     case $arg in
         s)
             start_bist_service
-            if [ $? -gt 0 ]; then
+            if [ $? -ne 0 ]; then
                 echo "Error starting the BIST service - $status"
+                exit 5
             fi
+            # also extract the bitstream
             extract_archive
             ;;
         k)
             stop_bist_service
             if [ $? -gt 0 ]; then
                 echo "Error killing the BIST service - $status"
+                exit 4
             fi
             ;;
         r)
@@ -230,6 +236,9 @@ while getopts ":hskrm:vtpxfc" arg; do
             ;;
         v)
             verify_bist_files true
+            if [ $? -ne 0 ]; then
+                exit 1
+            fi
             ;;
         p)
             program_bist_bitstream
