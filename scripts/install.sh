@@ -1,6 +1,40 @@
 #!/bin/bash
 
-#this script will install the files from the local repo or CAR over network or on the mounted sd-card p2
+usage() {
+    echo "Usage:
+    -g                  generate local package .tar.gz 
+    -n <NAME.tar.gz>    set the name of the package to generate or install on target
+    -s <TALON BOARD>    install the package on target over network (SCP & SSH)
+    -i <MOUNT PATH>     install the package on target when sd-card partition2 is mounted
+    -c <CAR VERSION>    download the package from CAR, given the CAR version
+    -b <TALON BOARD>    attempt to setup the remote board with BIST
+    -h                  display usage
+    "
+
+    echo "\
+    End to end setup:
+    ./scripts/install.sh -n bist_pkg.tar.gz -g -s talon1 -b talon1 
+
+    More Examples:
+    Generate a local package with a given name and install it:
+    ./scripts/install.sh -n bist_pkg.tar.gz -g -i /mnt/p2
+
+    Grab the local package and install it at the mounted path of sd-card:
+    ./scripts/install.sh -n bist_pkg.tar.gz -i /mnt/p2/
+
+    Download the package version 0.1.0 from CAR and install it on 192.168.8.1 over network:
+    ./scripts/install.sh -c 0.1.0 -s 192.168.8.1
+
+    Generate the local package with a given name:
+    ./scripts/install.sh -n bist_pkg.tar.gz -g
+
+    Download the package version 0.1.0 from CAR and install it at the mounted path:
+    ./scripts/install.sh -c 0.1.0 -i /mnt/p2/
+
+    Install a locally generated package to talon1 over network:
+    ./scripts/install.sh -n bist_pkg.tar.gz -s talon1
+    "
+}
 
 LOCAL_PACKAGE_NAME="bist.tar.gz"
 REPO_NAME="ska-mid-cbf-talondx-bist"
@@ -168,42 +202,6 @@ setup_remote_board(){
 
     echo -e "${GREEN}Target board setup successful. Retart the target board to finish setup.${NC}"
     return 0
-}
-
-usage() {
-    echo "Usage:
-    -g                  generate local package .tar.gz 
-    -n <NAME.tar.gz>    set the name of the package to generate or install on target
-    -s <TALON BOARD>    install the package on target over network (SCP & SSH)
-    -i <MOUNT PATH>     install the package on target when sd-card partition2 is mounted
-    -c <CAR VERSION>    download the package from CAR, given the CAR version
-    -b <TALON BOARD>    attempt to setup the remote board with BIST
-    -h                  display usage
-    "
-
-    echo "\
-    End to end setup:
-    ./scripts/install.sh -n bist_pkg.tar.gz -g -s talon1 -b talon1 
-
-    More Examples:
-    Genenate a local package with a given name and install it:
-    ./scripts/install.sh -n bist_pkg.tar.gz -g -i /mnt/p2
-
-    Grab the local package and install it at the mounted path of sd-card:
-    ./scripts/install.sh -n bist_pkg.tar.gz -i /mnt/p2/
-
-    Download the package version 0.1.0 from CAR and install it on 192.168.8.1 over network:
-    ./scripts/install.sh -c 0.1.0 -s 192.168.8.1
-
-    Generate the local package with a given name:
-    ./scripts/install.sh -n bist_pkg.tar.gz -g
-
-    Download the package version 0.1.0 from CAR and install it at the mounted path:
-    ./scripts/install.sh -c 0.1.0 -i /mnt/p2/
-
-    Install a locally generated package to talon1 over network:
-    ./scripts/install.sh -n bist_pkg.tar.gz -s talon1
-    "
 }
 
 while getopts ":hgc:i:s:n:b:" arg; do

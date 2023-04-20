@@ -1,14 +1,19 @@
 #!/bin/sh
 
-# The script is responsible for the following actions from HPS:
-# - Start the BIST systemd service
-# - Verify the BIST systemd service has started
-# - TODO: Verify that the files are placed at the correct location
-# - Stop the BIST service before it is executed on bootup
-# - Modify/Show the start-up delay of the BIST systemd service
-# - Print the results of the BIST to console
-# - Run the BIST again
-# - TODO: Verify the python packages that are needed are pre-installed
+usage() {
+    echo "Usage:"
+    echo -e "-s             Start the BIST systemd service and extract tar file"
+    echo -e "-k             Kill the BIST systemd service immediately, aborting the BIST"
+    echo -e "-r             Run the BIST"
+    echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
+    echo -e "-t             Show the current BIST systemd start delay time"
+    echo -e "-p             Program the BIST bitstream"
+    echo -e "-x             Extract the tar file at predefined location"
+    echo -e "-f             Publish the results (.csv) of the BIST to influxdb"
+    echo -e "-c             Print the results (.log) of the BIST"
+    echo -e "-h             Display the help message"
+    echo -e "-v             Verify the BIST files are installed correctly"
+}
 
 # path of the BIST source files
 BIST_SRC_PATH="/home/root/packages/bist"
@@ -22,7 +27,7 @@ BIST_SERVICE_FILES="bist.service bist.timer"
 BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
 # path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
-# path og the BIST bitstream package is extracted
+# path of the BIST bitstream package is extracted
 BIST_ARCHIVE_PATH=$BIST_SRC_PATH/extract_dir
 
 verify_bist_service_files() {
@@ -91,7 +96,7 @@ extract_archive() {
     # tar command on the Talon boards is from Busybox and 
     # has a limited set of command. tar options such as --get and --wildcards 
     # does not exist.
-    echo "Extracting files from tar to $BIST_SRC_PATH/extract_dir/"
+    echo "Extracting files from tar to $BIST_ARCHIVE_PATH"
     # remove the output directory if it exists
     if [ -d "$BIST_ARCHIVE_PATH" ]; then
         echo "Deleting previous tar file output directory"
@@ -181,21 +186,6 @@ modify_bist_start_delay() {
     else
         exit 1
     fi
-}
-
-usage() {
-    echo "Usage:"
-    echo -e "-s             Start the BIST systemd service and exract tar file"
-    echo -e "-k             Kill the BIST systemd service immediately, aborting the BIST"
-    echo -e "-r             Run the BIST"
-    echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
-    echo -e "-t             Show the current BIST systemd start delay time"
-    echo -e "-p             Program the BIST bitstream"
-    echo -e "-x             Extract the tar file at predefined location"
-    echo -e "-f             Publish the results (.csv) of the BIST to influxdb"
-    echo -e "-c             Print the results (.log) of the BIST"
-    echo -e "-h             Display the help message"
-    echo -e "-v             Verify the BIST files are installed correctly"
 }
 
 while getopts ":hskrm:vtpxfc" arg; do

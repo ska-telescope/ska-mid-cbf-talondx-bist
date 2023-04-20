@@ -22,8 +22,8 @@ Figure 1. BIST Deployment Architecture</div><br>
     $tar -xvzf bist_archive.tar.gz -C /
     ```
 
-4. On the target device, Run `bist -v` to verify the files.
-5. On the target device, run `bist -s` to install the BIST systemd service and extract the required BIST bitstream files.
+4. On the target device, run `bist.sh -v` to verify the files.
+5. On the target device, run `bist.sh -s` to install the BIST systemd service and extract the required BIST bitstream files.
 6. Restart the target device; the BIST will run automatically on boot-up.
    
 ### Using the scripts
@@ -50,15 +50,15 @@ For example a given package `bist_archive.tar.gz` could be unpacked at root:
 $ssh root@<target>
 $tar -xvzf bist_archive.tar.gz -C /
 ```
-This would place the `bist` script at `/bin`. The user may then call this script to perform various actions.
+This would place the `bist.sh` script at `/bin`. The user may then call this script to perform various actions.
 
 ### Available Actions
 
-The intent is that the BIST will start automatically on each boot-up to run a system diagnostic. However, a small delay is introduced before this service is started in case it is required to stop it from running. This delay is managed by `bist.timer` service and could be modified by the `bist` script.
+The intent is that the BIST will start automatically on each boot-up to run a system diagnostic. However, a small delay is introduced before this service is started in case it is required to stop it from running. This delay is managed by `bist.timer` service and could be modified by the `bist.sh` script.
 
 The automatic startup is achieved via the systemd service (unit files). The `bist.service` is triggered by `bist.timer`. The user may kill the BIST runner before it is triggered by `bist.timer` via the bist script.
 
-Run the `bist` script to view the available commands.
+Run the `bist.sh` script to view the available commands.
 
 - -s&emsp;--> Start the BIST systemd service and exract tar file
 - -k&emsp;--> Kill the BIST systemd service immediately, aborting the BIST
