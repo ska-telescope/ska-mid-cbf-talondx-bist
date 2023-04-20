@@ -10,7 +10,7 @@ TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_RDT|G_POL[{pol}]|E_RDT|
 TOP|E_BASE|E_PERSONA|E_FSP|G_CORNER_TURNER_{ct}|E_CT|E_CT|E_CSR                                                     => corner_turner@{ct}
 TOP|E_BASE|E_PERSONA|E_FS_TRANSPORT|E_CIRCUIT_SWITCH|E_CSR                                                          => circuit_switch
 TOP|E_BASE|E_PERSONA|E_FS_TRANSPORT|G_RX[{ant}]|E_STREAM_REPAIR|E_REG_BANK                                          => packet_stream_repair_{ant}
-TOP|E_BASE|E_PERSONA|E_LED_CTRL|E_CSR                                                                               => led_ctrl
+TOP|E_BASE|E_PERSONA|E_LED_CTRL|E_CSR                                                                               => persona_led_ctrl
 TOP|E_BASE|E_PERSONA|E_SYS_ID|E_CSR                                                                                 => persona_sys_id
 TOP|E_BASE|E_PERSONA|E_VCC|E_PKT_CAP|E_CSR                                                                          => pkt_cap
 TOP|E_BASE|E_PERSONA|E_VCC|E_VCC_CH20|E_AVMM_BRIDGE                                                                 => vcc_ch20
@@ -55,5 +55,8 @@ TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_VCC_HISTOGRAM|E_CS
 TOP|E_BASE|E_PERSONA|E_FSP|G_ANTENNA_PROCESSING[{ant}]|E_POST_VCC_HISTOGRAM|E_HIST_POL{pol}|E_HISTOGRAM_RESULTS     => fsp_{ant}_post_vcc_histogram@results_pol{pol}
 TOP|E_BASE|E_PERSONA|E_VCC|E_PRE_VCC_HISTOGRAM|E_CSR                                                                => pre_vcc_histogram@control
 TOP|E_BASE|E_PERSONA|E_VCC|E_PRE_VCC_HISTOGRAM|E_HIST_POL{pol}|E_HISTOGRAM_RESULTS                                  => pre_vcc_histogram@results_pol{pol}
+
+TOP|E_BASE|E_PERSONA|E_DDR4_TESTER_{emif}|E_CSR                                                                      => ddr4_tester_{emif}
+TOP|E_BASE|E_PERSONA|E_SLIM_TESTER|G_MBO_DATA[{mbo}]|E_SLIM_TEST|E_FW_DBG|E_CSR                                      => slim_tester_{mbo}
 
 TOP|E_BASE|G_INCLUDE_JTAG|E_JTAG_BLASTER|E_AVMM_BRIDGE                                                              =>
