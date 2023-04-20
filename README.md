@@ -41,7 +41,7 @@ You have the following options for placing the BIST package onto a board/sd-card
     - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
 
 If end-to-end method is not used, users may then run the `bist.sh <flags>` scripts on the target to verify and install the services themselves. 
-## How to Use the on-board "\bin\bist\" script
+## How to Use the on-board "\bin\bist.sh" script
 
 The package grabbed from CAR (Central Artifact Repository) mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root on a given target talon board, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
 
@@ -81,7 +81,7 @@ The `-t` option shows the current set BIST start delay.
 The `-m` option allows the user to modify the delay from within the target environment.
 For example to set the start delay to 99 seconds after boot:
 ```
-$ssh root@talon1
+$ssh root@<target>
 $bist -m 99
 ```
 
@@ -107,6 +107,6 @@ The `-f` publishes the results of the most recent BIST output (.csv) to the infl
 - [x] Display the BIST output results
 - [ ] Verify the python dependencies are installed on the target
 - [x] Install the package using `install.sh` from CAR downloaded package or locally generated package
-- [x] Publish the results of the BIST to influxdb periodically
+- [x] Support bublishing the results of the BIST to influxdb
 - [ ] Add the official .ipmap
 - [ ] Add the official bitstream archive.tar.gz
