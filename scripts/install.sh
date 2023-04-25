@@ -231,7 +231,7 @@ check_directory_permissions(){
     done
 }
 
-while getopts ":hgc:i:s:n:b:p:" arg; do
+while getopts ":hgc:i:s:n:b:" arg; do
     case $arg in
         b)
             talon_board=${OPTARG}
