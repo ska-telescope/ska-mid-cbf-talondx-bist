@@ -315,7 +315,7 @@ def slim_config(slim_xcvr_phys, rx_loopback_mode, regsets):
 
     return xcvr_phy
 
-def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker):
+def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker, current_time):
     """accumulate word and error counts for the BER caluculation
        where BER = rx_idle_error_count/(rx_idle_word_count x bits/word)"""
 
@@ -409,8 +409,12 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker):
     logging.info(f"SLIM Loopback Test Summary")
     leap_obt = [1, 2, 3, 4, 5,]  # PCB LEAP On-Board Transcievers (OBTs) mapping
 
+    influx_csv_writer = bist_utils.influx_csv('bist.csv')
+    data_type = ['measurement','tag','tag','long','long','string','string','string','string','string','long','long','long','long','long','string','datetime:RFC3339']
+    influx_csv_writer.write_datatype(data_type)
+
     header_col = [
-        "Board",
+        "Register",
         "LEAP",
         "MBO",
         "Chan",
@@ -430,11 +434,11 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker):
 
     table = BeautifulTable(maxwidth=200, precision=32)
     table.columns.header = header_col
+    influx_csv_writer.write_header(header_col)
     for xcvr_name, xcvr in xcvr_phy.items():
-        data_row = []
+        data_row = ['talon_ber_status']
         data_row = (
             data_row
-            + [board]
             + [leap_obt[xcvr.mbo - 1]]
             + [xcvr.mbo]
             + [xcvr.chan]
@@ -452,9 +456,10 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker):
             + [f"{xcvr.rx_ber:.3e}"]
         )
         table.rows.append(data_row)
+        influx_csv_writer.write_csv(data_row, current_time)
     logging.info(table)
 
-def main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, runtime, regsets):
+def main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, runtime, regsets, current_time):
     # bist_utils.Date().log_timestamp()
     checker = bist_utils.Checker()
     logging.info(f"#---------------------------------------------------------")
@@ -462,7 +467,7 @@ def main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, runtime, regsets):
     # configure the SLIM XCVR PHYs
     xcvr_phy = slim_config(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, regsets)
     # run the transceiver PHY Rx cummulative bit error rate test (BER)
-    slim_bert(xcvr_phy, slim_xcvr_phys, runtime, slim_xcvr_phy_loopback_mode, checker)
+    slim_bert(xcvr_phy, slim_xcvr_phys, runtime, slim_xcvr_phy_loopback_mode, checker, current_time)
     checker.report_log(f"SLIM loopback test results")
     # clear the serial loopback 
     for xcvr_name, xcvr in xcvr_phy.items():
