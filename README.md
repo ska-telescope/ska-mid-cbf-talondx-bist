@@ -99,9 +99,9 @@ The `-r` option runs the bist. Note that the systemd `bist.service` uses this sa
 
 The `-x` option extracts the BIST bitstream related package (.tar.gz) at a predefined location. The execution of the BIST and programming of the FPGA relies on the existence of this directory.
 
-The `-c` option prints the results (.log) of the most recent BIST to the screen with $cat command. 
+The `-c` option prints the results (.txt) of the most recent BIST to the screen with $cat command. 
 
-The `-f` publishes the results of the most recent BIST output (.csv) to the influxdb database. It publishes the results via the influx CLI and requires the bucket named `bist` to exist on the target and the influxdb credentials are already setup on the board.
+The `-f` publishes the results of the most recent BIST output (.csv) to the influxdb database. It publishes the results via the influx CLI and requires the bucket named `talon` to exist on the target and the influxdb credentials are already setup on the board.
 
 ## TODOS
 - [x] Display the BIST output results
