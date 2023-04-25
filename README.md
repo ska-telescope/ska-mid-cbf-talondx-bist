@@ -68,15 +68,31 @@ or <br>
 `./scripts/install.sh -c 0.1.0 -s talon1 -b talon1`<br>
 
 ## Extra Helper Commands
-- Only generate a local package:<br>`./scripts/install.sh -n my_bist.tar.gz -g`
-- Only download the package from CAR:<br>`./scripts/install.sh -c 0.1.0`
-- Only trasnfer and unpack the package over network (SCP & SSH):<br>
-    - CAR:<br>`./scripts/install.sh -c 0.1.0 -s talon1`
-    - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -s talon1`
-- Only trasnfer and unpack the package if the sd-card is mounted:<br>
-    - CAR:<br>`./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
-    - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
+```
+Only generate a local package
 
+    $./scripts/install.sh -n my_bist.tar.gz -g
+
+Only download the package from CAR
+
+    $./scripts/install.sh -c 0.1.0
+
+Only trasnfer and unpack the package over network (SCP & SSH)
+
+    CAR:
+    $./scripts/install.sh -c 0.1.0 -s talon1
+    
+    LOCAL
+    $./scripts/install.sh -n my_bist.tar.gz -s talon1
+
+Only trasnfer and unpack the package if the sd-card is mounted:
+
+    CAR
+    $./scripts/install.sh -c 0.1.0 -i /mnt/p2/
+
+    LOCAL
+    $./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/
+```
 If end-to-end method is not used, users may then run the `bist.sh <flags>` scripts on the target to verify and install the services themselves. 
 
 # Using the on-board "/bin/bist.sh" script
