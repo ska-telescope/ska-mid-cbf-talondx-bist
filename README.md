@@ -77,15 +77,15 @@ Only download the package from CAR
 
     $./scripts/install.sh -c 0.1.0
 
-Only trasnfer and unpack the package over network (SCP & SSH)
+Only transfer and unpack the package over network (SCP & SSH)
 
-    CAR:
+    CAR
     $./scripts/install.sh -c 0.1.0 -s talon1
-    
+
     LOCAL
     $./scripts/install.sh -n my_bist.tar.gz -s talon1
 
-Only trasnfer and unpack the package if the sd-card is mounted:
+Only transfer and unpack the package if the sd-card is mounted:
 
     CAR
     $./scripts/install.sh -c 0.1.0 -i /mnt/p2/
@@ -161,17 +161,17 @@ The `-f` publishes the results of the most recent BIST output (.csv) to the infl
 ## Testing
 Before releasing into CAR, make sure the package that is going to be generated is fully working.
 1. Pull from the main branch
-2. Generate a local package `./scripts/install.sh -n test_bist.tar.gz -g`
+2. Generate a local package<br>`./scripts/install.sh -n test_bist.tar.gz -g`
 3. Inspect and make sure the contents are correct, the local generation process procudes a warning if permissions are not as expected.
-4. Once you are sure the contents are correct, install the package on the board, for example over network and set-it up via the script (end-to-end) `./scripts/install.sh -n test_bist.tar.gz -s talon1 -b talon1`
+4. Once you are sure the contents are correct, install the package on the board, for example over network and set-it up via the script (end-to-end)<br>`./scripts/install.sh -n test_bist.tar.gz -s talon1 -b talon1`
 5.  ssh into the board and once again verify that the files are setup correctly. This may be done using the now unpacked `/bin/bist.sh` script and passing it the `-v and -t` options to verify the files and print the bist start up delay
 6.  Run `bist.sh -s` to setup the BIST sysyemd services.
-7.  Restart the board and verify that the BIST was run on bootup and the results are generated in the  
+7.  Restart the board and verify that the BIST ran on bootup and the results were generated and logged.  
 
 ## Releasing
 The package is automatically released into CAR once the main branch is tagged.
-1. On branch `main`, add the bitstream files to `raw/ska-mid-cbf-talondx-bist/`. Each sub-directory of `raw/` prefixed with `ska-` will be packaged and uploaded to the CAR separately upon tag pipeline success, so delete any directories not intended for release; currently, only the `ska-mid-cbf-talondx-bist` package is used.
+1. On branch `main`, add the files to `raw/ska-mid-cbf-talondx-bist/`. Each sub-directory of `raw/` prefixed with `ska-` will be packaged and uploaded to the CAR separately upon tag pipeline success, so delete any directories not intended for release; currently, only the `ska-mid-cbf-talondx-bist` package is used.
 2. Update the `.release` file version; if simply incrementing the current 
 semver, can use the following make rules: `make bump-patch-release`, 
 `make bump-minor-release` or `make bump-major-release`, or do it manually.
-3. Tag the release. The package will be published into CAR
+1. Tag the release. The package will be published into CAR
