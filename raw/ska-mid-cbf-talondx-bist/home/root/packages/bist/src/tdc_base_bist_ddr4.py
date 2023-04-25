@@ -85,17 +85,18 @@ class DDR4_TESTER:
         self.checker.check(ddr4_tester_reg == val, f"{self.ddr4_tester_name} status: {ddr4_tester_reg}")
 
     def configure_block_test(self, pattern=0, start_addr=0x00000000, stop_addr=0x01000000):
-            # initialize block test parameters
-            self.write_start_addr_reg(start_addr)
-            self.write_stop_addr_reg(stop_addr) 
-            logging.debug(f"Initializing block test.")
-            self.reset_sequence()
-            time.sleep(0.1)
-            # configure block test parameters
-            logging.debug(f"Configuring block test.")
-            self.ddr4_tester.write_field("pattern_sel", pattern)
-            self.ddr4_tester.write_field("block_test_enable", True) 
-            # self.check_block_test_status(True)
+        # initialize block test parameters
+        self.write_start_addr_reg(start_addr)
+        self.write_stop_addr_reg(stop_addr) 
+        logging.debug(f"Initializing block test.")
+        self.reset_sequence()
+        time.sleep(0.1)
+        # configure block test parameters
+        logging.debug(f"Configuring block test.")
+        self.ddr4_tester.write_field("pattern_sel", pattern)
+
+    def enable_block_test(self):
+        self.ddr4_tester.write_field("block_test_enable", True) 
 
     def check_block_pattern_test_status(self):
         # Check Start: bits[0]
@@ -465,10 +466,12 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
                     stop_addr = start_addr + block_size
                     logging.debug(f"loop cnt: {lc}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}")
                 ddr4_tester.configure_block_test(pattern, start_addr, stop_addr)
-                if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
-                    last = 0
-                    current = length(ddr4_tester.read_current_rd_addr_reg())
-                    pbar.update(current - last)
+                for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
+                    ddr4_tester.enable_block_test()
+                    if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
+                        last = 0
+                        current = length(ddr4_tester.read_current_rd_addr_reg())
+                        pbar.update(current - last)
             for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
                 while ddr4_tester.read_check_done_reg() != True:
                     if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
@@ -572,6 +575,8 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern):
                 stop_addr = start_addr + block_size
                 logging.debug(f"loop cnt: {lc}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}")
             ddr4_tester.configure_block_test(pattern, start_addr, stop_addr)
+        for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
+            ddr4_tester.enable_block_test()
         for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
             while ddr4_tester.read_check_done_reg() != True:
                     time.sleep(0.5)
