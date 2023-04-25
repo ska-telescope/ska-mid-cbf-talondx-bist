@@ -1,3 +1,21 @@
+Table of Contents
+=================
+
+- [Table of Contents](#table-of-contents)
+- [Intro](#intro)
+  - [BIST Python Code](#bist-python-code)
+  - [BIST Deployment](#bist-deployment)
+  - [BIST Influxdb](#bist-influxdb)
+- [How to Install](#how-to-install)
+  - [Manual Method](#manual-method)
+  - [Using the "./scripts/install.sh" script](#using-the-scriptsinstallsh-script)
+  - [Extra Helper Commands](#extra-helper-commands)
+- [Using the on-board "/bin/bist.sh" script](#using-the-on-board-binbistsh-script)
+    - [Available Actions](#available-actions)
+- [Releasing into CAR](#releasing-into-car)
+  - [Testing](#testing)
+  - [Releasing](#releasing)
+
 # Intro
 
 This repository holds the Built In Self Test (BIST) for the Talons. It provides the source code to run the BIST, the bitstream to program, and a script that manages the BIST start, stop, and delay on the target system.
@@ -6,8 +24,25 @@ This repository holds the Built In Self Test (BIST) for the Talons. It provides 
 ![BIST Deployment Architecture](images/bist_arch.jpg)<br>
 Figure 1. BIST Deployment Architecture</div><br>
 
-## How to Install
-### Manual Method
+## BIST Python Code
+The BIST is made out of a series of python scripts that test various aspects of the design. It is run on boot-up and the the most recent results are published to a database on the board. The python scripts rely on the register definitions (.json and .ipamp) and helper function under "py_reg_sets."
+
+The BIST also requires the bitstream to be loaded at boot-up. There exists two scripts - `bist.sh` and `install.sh` that faciliates various aspects of the BIST deployment, set-up, verification, running and publishing.
+
+## BIST Deployment
+The BIST is deployed on a given board in two steps.
+1. Getting the required files onto a board/sd-card.
+2. setting up the services and files on a given board. 
+
+## BIST Influxdb 
+The results of the BIST test are saved as a .csv file. The output is then pushed to the influxdb on a given board using the influx CLI toolkit.
+A dry-run of the publish could be done via:
+```
+influx write dryrun --bucket talon --file ./bist.csv
+```
+
+# How to Install
+## Manual Method
 1. Grab the package from CAR.
 2. Transfer the package to the target device via SCP: 
    
@@ -26,22 +61,25 @@ Figure 1. BIST Deployment Architecture</div><br>
 5. On the target device, run `bist.sh -s` to install the BIST systemd service and extract the required BIST bitstream files.
 6. Restart the target device; the BIST will run automatically on boot-up.
    
-### Using the scripts
-You have the following options for placing the BIST package onto a board/sd-card:
-- Install the BIST package on target board and set it up (end-to-end):<br>
-  - `./scripts/install.sh -n my_bist.tar.gz -g -s talon1 -b talon1`<br>
-  - `./scripts/install.sh -c 0.1.0 -s talon1 -b talon1`<br>
+## Using the "./scripts/install.sh" script
+Install the BIST package on target board and set it up (end-to-end):<br>
+`./scripts/install.sh -n my_bist.tar.gz -g -s talon1 -b talon1`<br>
+or <br>
+`./scripts/install.sh -c 0.1.0 -s talon1 -b talon1`<br>
+
+## Extra Helper Commands
 - Only generate a local package:<br>`./scripts/install.sh -n my_bist.tar.gz -g`
 - Only download the package from CAR:<br>`./scripts/install.sh -c 0.1.0`
-- Only install the package over network (SCP & SSH):<br>
+- Only trasnfer and unpack the package over network (SCP & SSH):<br>
     - CAR:<br>`./scripts/install.sh -c 0.1.0 -s talon1`
     - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -s talon1`
-- Only install the package if the sd-card is mounted:<br>
+- Only trasnfer and unpack the package if the sd-card is mounted:<br>
     - CAR:<br>`./scripts/install.sh -c 0.1.0 -i /mnt/p2/`
     - LOCAL:<br>`./scripts/install.sh -n my_bist.tar.gz -i /mnt/p2/`
 
 If end-to-end method is not used, users may then run the `bist.sh <flags>` scripts on the target to verify and install the services themselves. 
-## How to Use the on-board "\bin\bist.sh" script
+
+# Using the on-board "/bin/bist.sh" script
 
 The package grabbed from CAR (Central Artifact Repository) mirrors the file system of the target talon boards. This has been done to simplify the process of deployment, because once the tar.gz package is unpacked at root on a given target talon board, all the necessary files and scripts would be placed at the correct location, granted the structure of this repository was set correctly.
 
@@ -60,7 +98,7 @@ The automatic startup is achieved via the systemd service (unit files). The `bis
 
 Run the `bist.sh` script to view the available commands.
 
-- -s&emsp;--> Start the BIST systemd service and exract tar file
+- -s&emsp;--> Start the BIST systemd service and exract the bitstream tar file
 - -k&emsp;--> Kill the BIST systemd service immediately, aborting the BIST
 - -r&emsp;--> Run the BIST
 - -m [time] --> Modify the BIST systemd start delay time by <time>
@@ -103,10 +141,21 @@ The `-c` option prints the results (.txt) of the most recent BIST to the screen 
 
 The `-f` publishes the results of the most recent BIST output (.csv) to the influxdb database. It publishes the results via the influx CLI and requires the bucket named `talon` to exist on the target and the influxdb credentials are already setup on the board.
 
-## TODOS
-- [x] Display the BIST output results
-- [ ] Verify the python dependencies are installed on the target
-- [x] Install the package using `install.sh` from CAR downloaded package or locally generated package
-- [x] Support bublishing the results of the BIST to influxdb
-- [ ] Add the official .ipmap
-- [ ] Add the official bitstream archive.tar.gz
+# Releasing into CAR
+## Testing
+Before releasing into CAR, make sure the package that is going to be generated is fully working.
+1. Pull from the main branch
+2. Generate a local package `./scripts/install.sh -n test_bist.tar.gz -g`
+3. Inspect and make sure the contents are correct, the local generation process procudes a warning if permissions are not as expected.
+4. Once you are sure the contents are correct, install the package on the board, for example over network and set-it up via the script (end-to-end) `./scripts/install.sh -n test_bist.tar.gz -s talon1 -b talon1`
+5.  ssh into the board and once again verify that the files are setup correctly. This may be done using the now unpacked `/bin/bist.sh` script and passing it the `-v and -t` options to verify the files and print the bist start up delay
+6.  Run `bist.sh -s` to setup the BIST sysyemd services.
+7.  Restart the board and verify that the BIST was run on bootup and the results are generated in the  
+
+## Releasing
+The package is automatically released into CAR once the main branch is tagged.
+1. On branch `main`, add the bitstream files to `raw/ska-mid-cbf-talondx-bist/`. Each sub-directory of `raw/` prefixed with `ska-` will be packaged and uploaded to the CAR separately upon tag pipeline success, so delete any directories not intended for release; currently, only the `ska-mid-cbf-talondx-bist` package is used.
+2. Update the `.release` file version; if simply incrementing the current 
+semver, can use the following make rules: `make bump-patch-release`, 
+`make bump-minor-release` or `make bump-major-release`, or do it manually.
+3. Tag the release. The package will be published into CAR
