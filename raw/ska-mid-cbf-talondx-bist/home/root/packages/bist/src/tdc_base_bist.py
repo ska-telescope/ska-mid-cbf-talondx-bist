@@ -105,9 +105,9 @@ if __name__ == "__main__":
     # FPGA module BIST testcases:
     #-------------------------------------------------------------------------
     currentTime = datetime.datetime.now()
-    if os.path.exists('./bist.csv'):
-        print("\r\nremoving ./bist.csv")
-        os.remove('./bist.csv')
+    if os.path.exists('./tdc_base_bist_logfile.csv'):
+        print("\r\nremoving ./tdc_base_bist_logfile.csv")
+        os.remove('./tdc_base_bist_logfile.csv')
 
     for testcase in testcases:
         print(f"\nRunning Talon-DX FPGA BIST testcase: {testcase}.")

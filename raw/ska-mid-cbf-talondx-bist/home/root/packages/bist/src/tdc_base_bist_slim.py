@@ -409,7 +409,7 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker, curr
     logging.info(f"SLIM Loopback Test Summary")
     leap_obt = [1, 2, 3, 4, 5,]  # PCB LEAP On-Board Transcievers (OBTs) mapping
 
-    influx_csv_writer = bist_utils.influx_csv('bist.csv')
+    influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
     data_type = ['measurement','tag','tag','long','long','string','string','string','string','string','long','long','long','long','long','string','datetime:RFC3339']
     influx_csv_writer.write_datatype(data_type)
 

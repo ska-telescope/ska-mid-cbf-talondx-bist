@@ -132,7 +132,7 @@ class TS_Fault:
 
     def talon_fault_status_table(self, current_time):
         logging.info(f"Talon Fault Status Summary")
-        influx_csv_writer = bist_utils.influx_csv('bist.csv')
+        influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
         data_type = ['measurement','boolean','boolean','boolean','boolean','boolean','boolean','boolean','boolean','boolean','boolean','string','dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
@@ -263,7 +263,7 @@ class TS_Clock:
 
     def talon_clock_status_table(self, current_time):
         logging.info(f"Talon Clock Status Summary")
-        influx_csv_writer = bist_utils.influx_csv('bist.csv')
+        influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
         data_type = ['measurement','double','double','double','double','boolean','boolean','boolean','dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
@@ -384,7 +384,7 @@ class TS_EMIF:
 
     def talon_emif_status_table(self, current_time):
         logging.info(f"Talon EMIF Status Summary")
-        influx_csv_writer = bist_utils.influx_csv('bist.csv')
+        influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
         data_type = ['measurement','tag','boolean','boolean','boolean','boolean','boolean','dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
@@ -488,7 +488,7 @@ class TS_E100G:
 
     def talon_e100g_status_table(self, current_time):
         logging.info(f"Talon E100G Status Summary")
-        influx_csv_writer = bist_utils.influx_csv('bist.csv')
+        influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
         data_type = ['measurement','tag','boolean','boolean','boolean','boolean','dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
@@ -609,7 +609,7 @@ class TS_SLIM:
 
     def talon_slim_status_table(self, current_time):
         logging.info(f"Talon SLIM Status Summary")
-        influx_csv_writer = bist_utils.influx_csv('bist.csv')
+        influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
         data_type = ['measurement','string','string','string','string','string','string','dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 

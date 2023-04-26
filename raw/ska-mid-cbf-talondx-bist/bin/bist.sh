@@ -24,7 +24,7 @@ BIST_SERVICE_PATH="/etc/systemd/system"
 # list of systemd service files
 BIST_SERVICE_FILES="bist.service bist.timer"
 # path of the BIST bitstream archive
-BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
+BIST_ARCHIVE=$BIST_SRC_PATH/talon_dx-tdc_base-tdc_bist.tar.gz
 # path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
 # path of the BIST bitstream package is extracted

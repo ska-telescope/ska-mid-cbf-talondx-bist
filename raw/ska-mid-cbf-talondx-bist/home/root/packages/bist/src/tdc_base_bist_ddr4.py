@@ -492,7 +492,7 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern, curren
         board = idx.get("board")
         emif_list = idx.get("EMIF")
 
-    influx_csv_writer = bist_utils.influx_csv('bist.csv')
+    influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
     data_type = ['measurement','tag','string','double', 'double','string','string','long','long','dateTime:RFC3339']
     influx_csv_writer.write_datatype(data_type)
 
@@ -592,7 +592,7 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, current_tim
         board = idx.get("board")
         emif_list = idx.get("EMIF")
 
-    influx_csv_writer = bist_utils.influx_csv('bist.csv')
+    influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
     data_type = ['measurement','tag','string','double', 'double','string','string','long','long','dateTime:RFC3339']
     influx_csv_writer.write_datatype(data_type)
 
