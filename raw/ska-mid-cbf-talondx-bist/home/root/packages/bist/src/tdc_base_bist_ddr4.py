@@ -4,13 +4,13 @@
 # JIRA CIP-1285 Report DDR4 BIST status parameters as part of BIST script
 #
 # File Name: tdc_base_bist_ddr4.py
-# 
-# Description: Python Built-In Self Test (BIST) talon board verification 
+#
+# Description: Python Built-In Self Test (BIST) talon board verification
 # script - DDR4.
 #
-# BIST script for accessing FPGA registers. Note register_access.py is 
-# imported to access the FPGA registers. The script is run directly on the 
-# Talon board in Python stand-alone mode. 
+# BIST script for accessing FPGA registers. Note register_access.py is
+# imported to access the FPGA registers. The script is run directly on the
+# Talon board in Python stand-alone mode.
 # Test status is output to the Python logger utility.
 #
 # Date: 29 MAR 2023, developed during PI18
@@ -18,11 +18,11 @@
 # args: <filename>.json and <filename>.ipmap files
 #
 # Run on talon board as follows:
-# root@talon:~# 
-#     python3 tdc_base_bist_ddr4.py ./talon_dx-tdc_base.json ./tdc.ipmap 
+# root@talon:~#
+#     python3 tdc_base_bist_ddr4.py ./talon_dx-tdc_base-tdc_bist.json ./tdc.ipmap
 #
-# functions: 
-# 
+# functions:
+#
 # References:
 #
 #-----------------------------------------------------------------------------
@@ -42,9 +42,17 @@ import bist_utils
 
 class DDR4_TESTER:
     def __init__(self, regsets, ddr4_tester_name, mem_size, checker) -> None:
-        self.ddr4_tester = regsets.get(ddr4_tester_name) 
-        self.ddr4_size = mem_size
+        self.ddr4_tester = regsets.get(ddr4_tester_name)
         self.ddr4_tester_name = ddr4_tester_name
+        if (mem_size == '32GB'):
+            self.ddr4_size = 32
+            self.ddr4_max_addr = 2**29 - 1
+        elif (mem_size == '256GB'):
+            self.ddr4_size = 256
+            self.ddr4_max_addr = 2**32 - 1
+        else:
+            assert((mem_size == '32GB') or (mem_size == '256GB')), \
+                f"Memory selection error, {mem_size} memory size is not supported!"
         self.checker = checker
         self.test_status = "init"
 
@@ -57,37 +65,37 @@ class DDR4_TESTER:
     def reset(self, val=False):
         # Reset: bits[0]:
         # Set this bit to control the DDR4 in reset state.
-        self.ddr4_tester.write_field("reset", val) 
+        self.ddr4_tester.write_field("reset", val)
         logging.debug(f"{self.ddr4_tester_name} reset: {val}")
 
     def read_pattern_select_reg(self, pattern):
         # Pattern Select: bits[1:0]
         # Selects the block test pattern
-        ddr4_tester_reg = self.ddr4_tester.read_field("pattern_sel") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("pattern_sel")
         logging.debug(f"{self.ddr4_tester_name} pattern_sel: {ddr4_tester_reg}")
         return ddr4_tester_reg
 
     def read_block_test_enable_reg(self):
         # Block Test Enable, bits[0]
         # Set this bit to enable the test pattern block test
-        ddr4_tester_reg = self.ddr4_tester.read_field("block_test_enable") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("block_test_enable")
         logging.info(f"{self.ddr4_tester_name} block_test_enable: {ddr4_tester_reg}")
 
     def write_block_test_enable_reg(self, val=False):
         # Block Test Enable, bits[0]
         # Set this bit to enable the test pattern block test
-        self.ddr4_tester.write_field("block_test_enable", val) 
+        self.ddr4_tester.write_field("block_test_enable", val)
 
     def check_block_test_status(self, val=False):
-        # Test Status: bits[0]        
-        # DDR4 test status: 0 = manual, 1 = block 
+        # Test Status: bits[0]
+        # DDR4 test status: 0 = manual test, 1 = block test
         ddr4_tester_reg = self.ddr4_tester.read_field("status")
         self.checker.check(ddr4_tester_reg == val, f"{self.ddr4_tester_name} status: {ddr4_tester_reg}")
 
     def configure_block_test(self, pattern=0, start_addr=0x00000000, stop_addr=0x01000000):
         # initialize block test parameters
         self.write_start_addr_reg(start_addr)
-        self.write_stop_addr_reg(stop_addr) 
+        self.write_stop_addr_reg(stop_addr)
         logging.debug(f"Initializing block test.")
         self.reset_sequence()
         time.sleep(0.1)
@@ -96,45 +104,45 @@ class DDR4_TESTER:
         self.ddr4_tester.write_field("pattern_sel", pattern)
 
     def enable_block_test(self):
-        self.ddr4_tester.write_field("block_test_enable", True) 
+        self.ddr4_tester.write_field("block_test_enable", True)
 
     def check_block_pattern_test_status(self):
         # Check Start: bits[0]
         # DDR4 Tester data checker running status
-        ddr4_tester_reg = self.ddr4_tester.read_field("chk_start") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("chk_start")
         self.checker.check_quiet(ddr4_tester_reg == True, f"{self.ddr4_tester_name} chk_start: {ddr4_tester_reg}")
 
         # Check Done: bits[0]
         # DDR4 Tester data checker finished status
-        ddr4_tester_reg = self.ddr4_tester.read_field("chk_done") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("chk_done")
         self.checker.check_quiet(ddr4_tester_reg == True, f"{self.ddr4_tester_name} chk_done: {ddr4_tester_reg}")
 
         # Check Status: bits[7:0]
         # DDR4 Tester data checker test status, pass = 0xFF
-        ddr4_tester_reg = self.ddr4_tester.read_field("chk_status") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("chk_status")
         self.checker.check_quiet(ddr4_tester_reg == 0xFF, f"{self.ddr4_tester_name} chk_status: 0x{ddr4_tester_reg:02X}")
 
         # Check Error Count: bits[31:0]
         # DDR4 Tester data checker error count, pass = 0x00000000
-        ddr4_tester_reg = self.ddr4_tester.read_field("err_cnt") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("err_cnt")
         self.checker.check_quiet(ddr4_tester_reg == 0x00000000, f"{self.ddr4_tester_name} err_cnt: {ddr4_tester_reg}")
 
         # Check Error Address: bits[31:0]
         # DDR4 Tester data checker error address, pass = 0x00000000
         # Note this is the address of last posted error, resets to address 0x00000000
-        ddr4_tester_reg = self.ddr4_tester.read_field("err_addr") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("err_addr")
         self.checker.check_quiet(ddr4_tester_reg == 0x00000000, f"{self.ddr4_tester_name} err_addr: 0x{ddr4_tester_reg:08X}")
 
     def read_check_start_reg(self):
         # Check Start: bits[0]
         # DDR4 Tester data checker running status
-        ddr4_tester_reg = self.ddr4_tester.read_field("chk_start") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("chk_start")
         return ddr4_tester_reg
 
     def read_check_done_reg(self):
         # Check Done: bits[0]
         # DDR4 Tester data checker finished status
-        ddr4_tester_reg = self.ddr4_tester.read_field("chk_done") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("chk_done")
         return ddr4_tester_reg
 
     def read_current_wr_addr_reg(self):
@@ -175,41 +183,41 @@ class DDR4_TESTER:
     def read_check_status_reg(self):
         # Check Status: bits[7:0]
         # DDR4 Tester data checker test status, pass = 0xFF
-        ddr4_tester_reg = self.ddr4_tester.read_field("chk_status") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("chk_status")
         return ddr4_tester_reg
 
     def read_error_count_reg(self):
         # Check Error Count: bits[31:0]
         # DDR4 Tester data checker error count, pass = 0x00000000
-        ddr4_tester_reg = self.ddr4_tester.read_field("err_cnt") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("err_cnt")
         return ddr4_tester_reg
 
     def read_error_addr_reg(self):
         # Check Error Address: bits[31:0]
         # DDR4 Tester data checker error address, pass = 0x00000000
         # Note this is the address of last posted error, resets to address 0x00000000
-        ddr4_tester_reg = self.ddr4_tester.read_field("err_addr") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("err_addr")
         return ddr4_tester_reg
 
     def write_addr_coarse_reg(self, val=0x00000000):
         # Coarse Address: bits[31:0]
         # Coarse address for memory spot check
-        self.ddr4_tester.write_field("spot_addr_coarse", val) 
+        self.ddr4_tester.write_field("spot_addr_coarse", val)
 
     def write_addr_fine_reg(self, val=0x00000000):
         # Fine Address: bits[4:0]
         # Fine address for memory spot check
-        self.ddr4_tester.write_field("spot_addr_fine", val) 
+        self.ddr4_tester.write_field("spot_addr_fine", val)
 
     def write_data_reg(self, val=0x00000000):
         # Write Data : bits[31:0]
         # Write data for for memory spot check
-        self.ddr4_tester.write_field("spot_write_data", val) 
-        
+        self.ddr4_tester.write_field("spot_write_data", val)
+
     def read_data_reg(self):
         # Read Data : bits[31:0]
         # Read data for for memory spot check
-        ddr4_tester_reg = self.ddr4_tester.read_field("spot_read_data") 
+        ddr4_tester_reg = self.ddr4_tester.read_field("spot_read_data")
         return ddr4_tester_reg
 
     def rw_enable(self, val=1):
@@ -222,60 +230,20 @@ class DDR4_TESTER:
         time.sleep(10**(-3))
         self.reset(False)
 
-    def maunal_read_write_test(self):
+    def manual_random_read_write_check(self, num_checks=1):
         self.write_block_test_enable_reg(False)
         self.reset_sequence()
-        wr_addr_fine = 0x00
-        if (self.ddr4_size == '32GB'):
-            wr_addr_coarse = random.randint(0, 2**29 - 1); 
-        elif (self.ddr4_size == '256GB'):
-            wr_addr_coarse = random.randint(0, 2**32 - 1); 
-        wr_data = random.randint(0, 2**32 - 1);   
-        self.write_addr_coarse_reg(wr_addr_coarse)
+        wr_addr_fine = 0x00  # EMIF: 576 bits / 32 bits = 18 -> range[0:17]
         self.write_addr_fine_reg(wr_addr_fine)
-        self.write_data_reg(wr_data)
-        self.rw_enable(0)   # 0 = write enable
-        self.rw_enable(1)   # 1 = read enable
-        rd_data = self.read_data_reg()
-        self.checker.check(rd_data == wr_data, f"{self.ddr4_tester_name} spot_read: addr: 0x{wr_addr_coarse:08X} data: 0x{rd_data:08X}")
-
-    def maunal_linear_read_write_test_loop(self):
-        self.write_block_test_enable_reg(False)
-        self.reset_sequence()
-        wr_addr_fine = 0x00
-        self.write_addr_fine_reg(wr_addr_fine)
-        # write data
-        for addr in range(0, 2**8, 1):    # write loop
-            self.write_addr_coarse_reg(addr)
-            wr_data = addr + 0x70000000
-            self.write_data_reg(wr_data)
-            self.rw_enable(0)   # 0 = write enable
-        # read / check data matches write data
-        for addr in range(0, 2**8, 1):    # read loop
-            self.write_addr_coarse_reg(addr) 
-            wr_data = addr + 0x70000000
-            self.rw_enable(1)   # 1 = read enable
-            rd_data = self.read_data_reg()
-            self.checker.check(rd_data == wr_data, f"{self.ddr4_tester_name} spot_read: addr: 0x{addr:08X} data: 0x{rd_data:08X}")
-
-    def manual_random_read_write_test(self):
-        self.write_block_test_enable_reg(False)
-        self.reset_sequence()
-        wr_addr_fine = random.randint(0, 18 - 1);  # EMIF: 576 bits / 32 bits = 18
-        self.write_addr_fine_reg(wr_addr_fine)
-        for idx in range(0, 2**8, 1):
-            if (self.ddr4_size == '32GB'):
-                wr_addr_coarse = random.randint(0, 2**29 - 1); 
-            elif (self.ddr4_size == '256GB'):
-                wr_addr_coarse = random.randint(0, 2**32 - 1); 
+        for idx in range(0, num_checks, 1):
+            wr_addr_coarse = random.randint(0, self.ddr4_max_addr);
             self.write_addr_coarse_reg(wr_addr_coarse)
-            wr_data = random.randint(0, 2**32 - 1);   
+            wr_data = random.randint(0, 2**32 - 1);   # 32-bit data range
             self.write_data_reg(wr_data)
             self.rw_enable(0)   # 0 = write enable
             self.rw_enable(1)   # 1 = read enable
             rd_data = self.read_data_reg()
-            self.checker.check(rd_data == wr_data, f"{self.ddr4_tester_name} spot_read: addr: 0x{wr_addr_coarse:08X} data: 0x{rd_data:08X}")
-
+            self.checker.check(rd_data == wr_data, f"{self.ddr4_tester_name} random_read_write: addr: 0x{wr_addr_coarse:08X} data: 0x{rd_data:08X}")
 
     def get_pattern_select_name(self, pattern):
         pattern_num = self.read_pattern_select_reg(pattern)
@@ -288,26 +256,14 @@ class DDR4_TESTER:
         elif pattern_num == 3:
             pattern_str = "alternating_5"
         return pattern_str
-   
+
     def update_test_status(self):
         status_reg = self.read_check_status_reg()
         if status_reg == 0xFF:
-            if (self.test_status == "init"):
+            if (not self.test_status == "failed"):
                 self.test_status = "passed"
-            elif (self.test_status == "passed"):
-                self.test_status = "passed"
-            else:
-                self.test_status = "failed"
         else:
             self.test_status = "failed"
-
-    def get_ddr4_max_addr(self):
-        # determine the maximum read address
-        if (self.ddr4_size == '32GB'):
-            max_addr = 2**29 - 1     
-        elif (self.ddr4_size == '256GB'):
-            max_addr = 2**32 - 1     
-        return max_addr
 
     def memory_size_tested(self, coeff):
         start_addr = self.read_start_addr_reg()
@@ -315,12 +271,8 @@ class DDR4_TESTER:
         return round(coeff * (stop_addr - start_addr) / 2**24)  # Gigabytes
 
     def percent_memory_tested(self, coeff):
-        if (self.ddr4_size == '32GB'):
-            mem_size =  32    
-        elif (self.ddr4_size == '256GB'):
-            mem_size =  256    
         mem_size_tested = self.memory_size_tested(coeff)
-        return round(mem_size_tested/mem_size*100, 2)
+        return round(mem_size_tested/self.ddr4_size*100, 2)
 
 
 random.seed()
@@ -339,20 +291,19 @@ def ddr4_tester_config(EMIFs, regsets, checker):
     for emif in emif_list:
         ddr4_testers[f"ddr4_tester_{emif}"] = DDR4_TESTER(regsets, f"ddr4_tester_{emif}", mem_size_list[idx], checker)
         idx += 1
-
     for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
         # logging.info(f"DDR4 Tester dictionary: key = {ddr4_tester_name}, value = {ddr4_tester}, size = {ddr4_tester.ddr4_size}")
         ddr4_tester.check_ver_id_reg()
         ddr4_tester.reset_sequence()
-
     return [ddr4_testers]
 
 
-def ddr4_manual_random_read_write_test(EMIFs, ddr4_testers, runtime):
+def ddr4_tester_manual_random_rw_check_timed(EMIFs, ddr4_testers, runtime):
     """
-    DDR4 Tester manual random data / address read/write test.
-    Enables the FPGA DDR4 Tester module manual read/write test
-    for the specified address and data.
+    DDR4 Tester manual random data/address read/write test.
+    Uses the FPGA DDR4 Tester module in manual mode to perform a read/write
+    check using random data/address pairs.
+    The test duration is set by the 'runtime' parameter.
     """
     for idx in EMIFs:
         emif_list = idx.get("EMIF")
@@ -362,16 +313,15 @@ def ddr4_manual_random_read_write_test(EMIFs, ddr4_testers, runtime):
     with tqdm.tqdm(desc=f"DDR4 random data/addr loop test", total=runtime*len(emif_list)+0.075, unit="Seconds", unit_scale=False, initial=0) as pbar:
         for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
             time_last = time_current = time.time()
-            max_addr = ddr4_tester.get_ddr4_max_addr()
             ddr4_tester.write_block_test_enable_reg(False)
             ddr4_tester.reset_sequence()
-            wr_addr_fine = 0x00  # EMIF: 576 bits / 32 bits = 18
+            wr_addr_fine = 0x00  # EMIF: 576 bits / 32 bits = 18 -> range[0:17]
             ddr4_tester.write_addr_fine_reg(wr_addr_fine)
             time_current = time.time()
             while ((time_current - time_last) <= runtime):
-                wr_addr_coarse = random.randint(0, max_addr); 
+                wr_addr_coarse = random.randint(0, ddr4_tester.ddr4_max_addr);
                 ddr4_tester.write_addr_coarse_reg(wr_addr_coarse)
-                wr_data = random.randint(0, 2**32 - 1);   
+                wr_data = random.randint(0, 2**32 - 1);   # 32-bit data range
                 ddr4_tester.write_data_reg(wr_data)
                 ddr4_tester.rw_enable(0)   # 0 = write enable
                 ddr4_tester.rw_enable(1)   # 1 = read enable
@@ -384,28 +334,28 @@ def ddr4_manual_random_read_write_test(EMIFs, ddr4_testers, runtime):
     logging.info(f"DDR4 Tester manual random data test finished in {end-start:1.1f} seconds.")
 
 
-def ddr4_tester_manual_rw_check(ddr4_testers):
+def ddr4_tester_manual_random_rw_check(ddr4_testers):
     """
-    DDR4 Tester manual read/write test functions.
-    Enables the FPGA DDR4 Tester module manual read/write test
-    for the specified address and data.
+    FPGA DDR4 Tester module manual mode read/write verfication using random
+    data / address pairs.
     """
+    num_checks = 2**0  # number of data/address pairs to check
     for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-        ddr4_tester.maunal_read_write_test()
-        # ddr4_tester.maunal_linear_read_write_test_loop()
-        # ddr4_tester.manual_random_read_write_test()
+        ddr4_tester.manual_random_read_write_check(num_checks)
 
 def length(addr):
     start_word_addr = 0
     return (addr - start_word_addr)
 
-
-def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
+def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern):
     """
-    Block pattern test function to check the DDR4 memory using the specified 
-    word pattern. The DDR4 Tester verifies the entire DDR4 memory space by 
-    writing a 8 x 72-bit pattern to the EMIF and reads the memory to check it 
-    matches the generated block test pattern.
+    The DDR4 Tester block test checks the DDR4 memory using a configurable
+    word pattern. The DDR4 Tester verifies the entire DDR4 memory space by
+    continuously writing a 8 x 72-bit pattern to the EMIF and then reading
+    the memory to check that it matches the generated block test pattern.
+    Note the DDR4 Tester has been updated to support configurable start and
+    stop memory addresses. This allows the block test to verify a portion
+    of the DDR4 memory space in order meet the BIST power-on time contraint.
     """
 
     # 0x01000000    # 1GB
@@ -446,13 +396,11 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
 
     COEFF_256 = int(256/32)
     block_size = stop_addr_base - start_addr_base
-
-    start_addr = start_addr_base
-    stop_addr = stop_addr_base
-    rd_addr_total = (stop_addr - start_addr) * STEP_CNT
-    logging.info(f"step_size: 0x{step_size:08X}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}, rd_addr_total: 0x{rd_addr_total:08X}")
+    rd_addr_total = (block_size) * STEP_CNT
 
     logging.info(f"DDR4 Tester block pattern test.")
+    logging.info(f"start_addr_base: 0x{start_addr_base:08X}, stop_addr_base: 0x{stop_addr_base:08X}, step_size: 0x{step_size:08X}, rd_addr_total: 0x{rd_addr_total:08X}")
+
     start = time.time()
 
     with tqdm.tqdm(desc="DDR4 Block Test", total=rd_addr_total, unit="Bytes", unit_scale=False, initial=0) as pbar:
@@ -461,17 +409,17 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
             stop_addr = stop_addr_base + step_size*lc
             logging.debug(f"loop cnt: {lc}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}")
             for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-                if ddr4_tester.ddr4_size == '256GB':
+                if ddr4_tester.ddr4_size == 256:
                     start_addr = COEFF_256 * start_addr
                     stop_addr = start_addr + block_size
                     logging.debug(f"loop cnt: {lc}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}")
                 ddr4_tester.configure_block_test(pattern, start_addr, stop_addr)
-                for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-                    ddr4_tester.enable_block_test()
-                    if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
-                        last = 0
-                        current = length(ddr4_tester.read_current_rd_addr_reg())
-                        pbar.update(current - last)
+            for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
+                ddr4_tester.enable_block_test()
+                if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
+                    last = 0
+                    current = length(ddr4_tester.read_current_rd_addr_reg())
+                    pbar.update(current - last)
             for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
                 while ddr4_tester.read_check_done_reg() != True:
                     if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
@@ -485,7 +433,7 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
                     pbar.update(current - last)
                 ddr4_tester.check_block_pattern_test_status()
                 ddr4_tester.update_test_status()
-                ddr4_tester.write_block_test_enable_reg(False)            
+                ddr4_tester.write_block_test_enable_reg(False)
     end = time.time()
     logging.info(f"DDR4 Tester block test finished in {end-start:1.1f} seconds.")
 
@@ -501,7 +449,6 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
         "EMIF",
         "Memory Size",
         "Memory Checked",
-        "Memory Checked",
         "Test Pattern",
         "Test Status",
         "Error Count",
@@ -516,9 +463,8 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
             data_row
             + [board]
             + [f"EMIF_{emif_list[idx]}"]
-            + [ddr4_tester.ddr4_size]
-            + [f"{ddr4_tester.memory_size_tested(STEP_CNT)}GB"]
-            + [f"{ddr4_tester.percent_memory_tested(STEP_CNT)}%"]
+            + [f"{ddr4_tester.ddr4_size}GB"]
+            + [f"{ddr4_tester.memory_size_tested(STEP_CNT)}GB ({ddr4_tester.percent_memory_tested(STEP_CNT)}%)"]
             + [ddr4_tester.get_pattern_select_name(pattern)]
             + [ddr4_tester.test_status]
             + [ddr4_tester.read_error_count_reg()]
@@ -528,101 +474,6 @@ def ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern):
         idx += 1
     logging.info(table)
 
-
-def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern):
-    """
-    Block pattern test function to check the DDR4 memory using the specified 
-    word pattern. The DDR4 Tester verifies the entire DDR4 memory space by 
-    writing a 8 x 72-bit pattern to the EMIF and reads the memory to check it 
-    matches the generated block test pattern.
-    """
-
-    # # 16GB of 32GB/256GB memory test, takes ~25 s
-    # STEP_CNT = 4
-    # start_addr_base = 0x00000000
-    # stop_addr_base  = 0x04000000    # 4GB
-    # step_size = 0x08000000    # 8GB
-
-    # # 16GB of 32GB/256GB memory test, takes ~27
-    # STEP_CNT = 8
-    # start_addr_base = 0x00000000
-    # stop_addr_base  = 0x02000000    # 2GB
-    # step_size = 0x04000000    # 4GB
-
-    # 16GB of 32GB/256GB memory test, takes ~29 s
-    STEP_CNT = 16
-    start_addr_base = 0x00000000
-    stop_addr_base  = 0x01000000    # 1GB
-    step_size = 0x02000000    # 2GB
-
-    COEFF_256 = int(256/32)
-    block_size = stop_addr_base - start_addr_base
-
-    start_addr = start_addr_base
-    stop_addr = stop_addr_base
-    rd_addr_total = (stop_addr - start_addr) * STEP_CNT
-    logging.info(f"step_size: 0x{step_size:08X}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}, rd_addr_total: 0x{rd_addr_total:08X}")
-
-    logging.info(f"DDR4 Tester block pattern test.")
-    start = time.time()
-    for lc in range (0, STEP_CNT, 1):
-        start_addr = start_addr_base + step_size*lc
-        stop_addr = stop_addr_base + step_size*lc
-        logging.debug(f"loop cnt: {lc}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}")
-        for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-            if ddr4_tester.ddr4_size == '256GB':
-                start_addr = COEFF_256 * start_addr
-                stop_addr = start_addr + block_size
-                logging.debug(f"loop cnt: {lc}, start_addr: 0x{start_addr:08X}, stop_addr: 0x{stop_addr:08X}")
-            ddr4_tester.configure_block_test(pattern, start_addr, stop_addr)
-        for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-            ddr4_tester.enable_block_test()
-        for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-            while ddr4_tester.read_check_done_reg() != True:
-                    time.sleep(0.5)
-            ddr4_tester.check_block_pattern_test_status()
-            ddr4_tester.update_test_status()
-            ddr4_tester.write_block_test_enable_reg(False)            
-    end = time.time()
-    logging.info(f"DDR4 Tester block test finished in {end-start:1.1f} seconds.")
-
-    logging.info(f"DDR4 Tester Block Test Summary")
-    for idx in EMIFs:
-        board = idx.get("board")
-        emif_list = idx.get("EMIF")
-
-    # Display the DDR4 Tester Block Test BIST Status
-    header_col = [
-        "Board",
-        "EMIF",
-        "Memory Size",
-        "Memory Checked",
-        "Memory Checked",
-        "Test Pattern",
-        "Test Status",
-        "Error Count",
-        "Error Address",
-    ]
-    table = BeautifulTable(maxwidth=200, precision=32)
-    table.columns.header = header_col
-    idx = 0
-    for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-        data_row = []
-        data_row = (
-            data_row
-            + [board]
-            + [f"EMIF_{emif_list[idx]}"]
-            + [ddr4_tester.ddr4_size]
-            + [f"{ddr4_tester.memory_size_tested(STEP_CNT)}GB"]
-            + [f"{ddr4_tester.percent_memory_tested(STEP_CNT)}%"]
-            + [ddr4_tester.get_pattern_select_name(pattern)]
-            + [ddr4_tester.test_status]
-            + [ddr4_tester.read_error_count_reg()]
-            + [ddr4_tester.read_error_addr_reg()]
-            )
-        table.rows.append(data_row)
-        idx += 1
-    logging.info(table)
 
 
 def main(EMIFs, pattern, runtime, regsets):
@@ -631,10 +482,9 @@ def main(EMIFs, pattern, runtime, regsets):
     logging.info(f"#---------------------------------------------------------")
     logging.info(f"Talon-DX FPGA BIST testcase: DDR4")
     [ddr4_testers] = ddr4_tester_config(EMIFs, regsets, checker)
-    ddr4_tester_manual_rw_check(ddr4_testers)
-    # ddr4_manual_random_read_write_test(EMIFs, ddr4_testers, runtime)
-    ddr4_tester_block_pattern_rw_check_tqdm(EMIFs, ddr4_testers, pattern)
-    # ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern)
+    ddr4_tester_manual_random_rw_check(ddr4_testers)
+    # ddr4_tester_manual_random_rw_check_timed(EMIFs, ddr4_testers, runtime)
+    ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern)
     checker.report_log(f"DDR4 Tester test results")
     return checker
 
@@ -660,7 +510,7 @@ if __name__ == "__main__":
         # DDR4 Tester module
         DDR4_EMIFs = [
         {
-            'board': "talon", 
+            'board': "talon",
             "EMIF": ['TR', 'BL', 'BR'],
             "SIZE": ['256GB', '32GB', '32GB'],
         },
@@ -685,10 +535,10 @@ if __name__ == "__main__":
             (testcase == "DDR4_Alternating_5_Pattern")), \
             f"DDR4 BIST: {testcase} testcase not found"
     runtime = args.get('DDR4_runtime')
-    EMIFs = args.get('DDR4_EMIFs') 
+    EMIFs = args.get('DDR4_EMIFs')
 
     #-------------------------------------------------------------------------
-    # FPGA module BIST test: 
+    # FPGA module BIST test:
     #-------------------------------------------------------------------------
     # DDR4 Tester testcases: 72-bit test patterns
     if testcase == "DDR4_Walking_0_Pattern":            # 0xFFFFFFFFFFFFFFFFFE
@@ -702,4 +552,4 @@ if __name__ == "__main__":
     else:
         logging.error(f"Invalid testcase {testcase}!")
 
-    checker = main(EMIFs, pattern, runtime, regsets)    
+    checker = main(EMIFs, pattern, runtime, regsets)
