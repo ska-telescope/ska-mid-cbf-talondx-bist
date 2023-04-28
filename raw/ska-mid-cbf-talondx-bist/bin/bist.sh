@@ -96,7 +96,7 @@ extract_archive() {
     # tar command on the Talon boards is from Busybox and 
     # has a limited set of command. tar options such as --get and --wildcards 
     # does not exist.
-    echo "Extracting files from tar to $BIST_ARCHIVE_PATH"
+    echo "Extracting files from $BIST_ARCHIVE to $BIST_ARCHIVE_PATH"
     if [ -f $BIST_ARCHIVE ]; then
 
         # remove the output directory if it exists
@@ -124,10 +124,18 @@ program_bist_bitstream() {
     if [ -z "$dtb" ] || [ -z "$bs_core" ]; then
         echo ".dtb or .rbf file(s) missing. Aborting bitstream programming!"
         exit 3
-    else 
+    else
+        echo "Using $bs_core and $dtb"
         rmdir $BIST_BITSTREAM_PATH/*
         mkdir $BIST_BITSTREAM_PATH/base
-        echo $BIST_ARCHIVE_PATH/$dtb > $BIST_BITSTREAM_PATH/base/path
+        # copy the files over to the tempfs 
+        cp $dtb /lib/firmware
+        cp $bs_core /lib/firmware
+        # grab the basename of the target files
+        target_dtb=`basename $dtb`
+        target_bs_core=`basename $bs_core`
+        # move to the directory in a new shell and write the overlay
+        (cd /lib/firmware && echo $target_dtb > $BIST_BITSTREAM_PATH/base/path)
         dmesg | tail -n 10
     fi
 }
@@ -142,7 +150,9 @@ execute_bist() {
         echo "ipmap or json file(s) missing. Aborting BIST execution!"
         exit 1
     else
-        python3 $BIST_SRC_PATH/src/run_bist_tests.py $BIST_ARCHIVE_PATH/$json $BIST_SRC_PATH/$ipmap
+        echo "Using $json and $ipmap"
+        # run in a new shell
+        (cd $BIST_SRC_PATH/src; python3 $BIST_SRC_PATH/src/run_bist_tests.py $json $ipmap)
     fi
 }
 
@@ -158,8 +168,8 @@ run_bist() {
 
 get_bist_results() {
     # print the results of the BIST
-    if [ -f $BIST_SRC_PATH/tdc_base_bist_logfile.txt ]; then
-        echo $BIST_SRC_PATH/src/tdc_base_bist_logfile.txt
+    if [ -f $BIST_SRC_PATH/src/tdc_base_bist_logfile.txt ]; then
+        less $BIST_SRC_PATH/src/tdc_base_bist_logfile.txt
         return 0
     else
         echo "$BIST_SRC_PATH/src/tdc_base_bist_logfile.txt not found"

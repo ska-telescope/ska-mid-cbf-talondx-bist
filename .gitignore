@@ -3,3 +3,4 @@ build/*
 MANIFEST.*
 .env
 PrivateRules.mak
+*.report
