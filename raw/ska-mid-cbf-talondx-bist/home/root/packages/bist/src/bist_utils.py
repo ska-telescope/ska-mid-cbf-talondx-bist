@@ -30,6 +30,12 @@ class Checker:
             self.checks_failed += 1
             if raise_exception:
                 raise AssertionError(f"FAILED check. {message}")
+            
+    def get_checks_failed(self):
+        return self.checks_failed
+    
+    def get_checks_passed(self):
+        return self.checks_passed
 
     def report_log(self, message=""):
         logging.info(f"{message}: {self.checks_passed} checks passed, {self.checks_failed} checks failed.")

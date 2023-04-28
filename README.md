@@ -6,6 +6,7 @@ Table of Contents
   - [BIST Python Code](#bist-python-code)
   - [BIST Deployment](#bist-deployment)
   - [BIST Influxdb](#bist-influxdb)
+  - [BIST and QSPI Image](#bist-and-qspi-image)
 - [How to Install](#how-to-install)
   - [Manual Method](#manual-method)
   - [Using the "./scripts/install.sh" script](#using-the-scriptsinstallsh-script)
@@ -40,6 +41,8 @@ A dry-run of the publish could be done via:
 ```
 influx write dryrun --bucket talon --file ./bist.csv
 ```
+## BIST and QSPI Image
+The BIST assumes the bitstream is compatible with the QSPI image that is already on the board. It does not do any checks to confirm the compatibility and proceeds to attempt to program the bitstream on boot-up. Make sure the QSPI image is compatible with the BIST by programming it beforehand (either through the .jic file for JTAG programming or using the Remote Update Feature).
 
 # How to Install
 ## Manual Method
@@ -62,6 +65,8 @@ influx write dryrun --bucket talon --file ./bist.csv
 6. Restart the target device; the BIST will run automatically on boot-up.
    
 ## Using the "./scripts/install.sh" script
+Various commands can be run from the development server. Execute the `install.sh` script from the root of the repository.<br>
+
 Install the BIST package on target board and set it up (end-to-end):<br>
 `./scripts/install.sh -n my_bist.tar.gz -g -s talon1 -b talon1`<br>
 or <br>
@@ -145,6 +150,10 @@ $ssh root@<target>
 $systemctl status bist.timer
 $systemctl status bist.service
 $journalctl -u bist.timer
+```
+The remaining time before the BIST is run can be polled:
+```
+systemctl list-timer --all
 ```
 
 The `-v` option verifies that the bitstream files and the service files are placed (unpacked) at the correct location.

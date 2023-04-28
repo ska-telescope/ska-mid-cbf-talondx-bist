@@ -410,7 +410,26 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker, curr
     leap_obt = [1, 2, 3, 4, 5,]  # PCB LEAP On-Board Transcievers (OBTs) mapping
 
     influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-    data_type = ['measurement','tag','tag','long','long','string','string','string','string','string','long','long','long','long','long','string','datetime:RFC3339']
+    data_type = [
+        'measurement',
+        'tag',
+        'tag',
+        'long',
+        'long',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'long',
+        'long',
+        'long',
+        'long',
+        'long',
+        'string',
+        'long',
+        'long',
+        'datetime:RFC3339']
     influx_csv_writer.write_datatype(data_type)
 
     header_col = [
@@ -430,6 +449,8 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker, curr
         "Rx Idle Words",
         "Rx Idle Errors",
         "Estimated BER",
+        "checks_passed",
+        "checks_failed"
     ]
 
     table = BeautifulTable(maxwidth=200, precision=32)
@@ -455,6 +476,8 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker, curr
             + [xcvr.rx_idle_error_count]
             + [f"{xcvr.rx_ber:.3e}"]
         )
+        data_row.append( checker.get_checks_passed() )
+        data_row.append( checker.get_checks_failed() )
         table.rows.append(data_row)
         influx_csv_writer.write_csv(data_row, current_time)
     logging.info(table)

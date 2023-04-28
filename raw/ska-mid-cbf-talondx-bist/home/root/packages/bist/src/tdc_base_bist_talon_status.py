@@ -133,7 +133,22 @@ class TS_Fault:
     def talon_fault_status_table(self, current_time):
         logging.info(f"Talon Fault Status Summary")
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-        data_type = ['measurement','boolean','boolean','boolean','boolean','boolean','boolean','boolean','boolean','boolean','boolean','string','dateTime:RFC3339']
+        data_type = [
+            'measurement',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'string',
+            'long',
+            'long',
+            'dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
             "Register",
@@ -148,6 +163,8 @@ class TS_Fault:
             "ETH1 PLL",
             "SLIM PLLs",
             "Non Zero",
+            "checks_passed",
+            "checks_failed"
             ]
         table = BeautifulTable(maxwidth=200, precision=32)
         table.columns.header = header_col
@@ -155,6 +172,8 @@ class TS_Fault:
         data_row = ['talon_fault_status']
         for idx in range(0,len(self.ts_reg),1):
             data_row = data_row + [f"{self.ts_reg[idx]}"]
+        data_row.append( self.checker.get_checks_passed() )
+        data_row.append( self.checker.get_checks_failed() )
         table.rows.append(data_row)
         influx_csv_writer.write_csv(data_row, current_time)
         logging.info(table)
@@ -264,7 +283,18 @@ class TS_Clock:
     def talon_clock_status_table(self, current_time):
         logging.info(f"Talon Clock Status Summary")
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-        data_type = ['measurement','double','double','double','double','boolean','boolean','boolean','dateTime:RFC3339']
+        data_type = [
+            'measurement',
+            'double',
+            'double',
+            'double',
+            'double',
+            'boolean',
+            'boolean',
+            'boolean',
+            'long',
+            'long',
+            'dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
             "Register",
@@ -275,6 +305,8 @@ class TS_Clock:
             "PLL Locked",
             "FS PLL Locked",
             "Comms PLL Locked",
+            "checks_passed",
+            "checks_failed"
             ]
         table = BeautifulTable(maxwidth=200, precision=32)
         table.columns.header = header_col
@@ -282,6 +314,8 @@ class TS_Clock:
         data_row = ['talon_clock_status']
         for idx in range(0,len(self.ts_reg),1):
             data_row = data_row + [f"{self.ts_reg[idx]}"]
+        data_row.append( self.checker.get_checks_passed() )
+        data_row.append( self.checker.get_checks_failed() )
         table.rows.append(data_row)
         influx_csv_writer.write_csv(data_row, current_time)
         logging.info(table)
@@ -385,7 +419,17 @@ class TS_EMIF:
     def talon_emif_status_table(self, current_time):
         logging.info(f"Talon EMIF Status Summary")
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-        data_type = ['measurement','tag','boolean','boolean','boolean','boolean','boolean','dateTime:RFC3339']
+        data_type = [
+            'measurement',
+            'tag',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'long',
+            'long',
+            'dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
             "Register",
@@ -395,6 +439,8 @@ class TS_EMIF:
             "Cal Success",
             "Cal Fail",
             "AMM Ready",
+            "checks_passed",
+            "checks_failed"
             ]
         table = BeautifulTable(maxwidth=200, precision=32)
         table.columns.header = header_col
@@ -404,6 +450,8 @@ class TS_EMIF:
             data_row = data_row + [f"EMIF{emif}"]
             for idx in range(0,len(self.ts_reg[emif]),1):
                 data_row = data_row + [f"{self.ts_reg[emif][idx]}"]
+            data_row.append( self.checker.get_checks_passed() )
+            data_row.append( self.checker.get_checks_failed() )
             table.rows.append(data_row)
             influx_csv_writer.write_csv(data_row, current_time)
         logging.info(table)
@@ -489,7 +537,16 @@ class TS_E100G:
     def talon_e100g_status_table(self, current_time):
         logging.info(f"Talon E100G Status Summary")
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-        data_type = ['measurement','tag','boolean','boolean','boolean','boolean','dateTime:RFC3339']
+        data_type = [
+            'measurement',
+            'tag',
+            'boolean',
+            'boolean',
+            'boolean',
+            'boolean',
+            'long',
+            'long',
+            'dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
             "Register",
@@ -498,6 +555,8 @@ class TS_E100G:
             "Main PLL Cal Busy",
             "Buffer PLL Locked",
             "Buffer PLL Cal Busy",
+            "checks_passed",
+            "checks_failed"
             ]
         table = BeautifulTable(maxwidth=200, precision=32)
         table.columns.header = header_col
@@ -507,6 +566,8 @@ class TS_E100G:
             data_row = data_row + [f"E100G{emif}"]
             for idx in range(0,len(self.ts_reg[emif]),1):
                 data_row = data_row + [f"{self.ts_reg[emif][idx]}"]
+            data_row.append( self.checker.get_checks_passed() )
+            data_row.append( self.checker.get_checks_failed() )    
             table.rows.append(data_row)
             influx_csv_writer.write_csv(data_row, current_time)
         logging.info(table)
@@ -610,7 +671,17 @@ class TS_SLIM:
     def talon_slim_status_table(self, current_time):
         logging.info(f"Talon SLIM Status Summary")
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-        data_type = ['measurement','string','string','string','string','string','string','dateTime:RFC3339']
+        data_type = [
+            'measurement',
+            'string',
+            'string',
+            'string',
+            'string',
+            'string',
+            'string',
+            'long',
+            'long',
+            'dateTime:RFC3339']
         influx_csv_writer.write_datatype(data_type)
         header_col = [ 
             "Register",
@@ -620,6 +691,8 @@ class TS_SLIM:
             "PLL Locked (MSW)",
             "PLL Cal Busy (LSW)",
             "PLL Cal Busy (MSW)",
+            "checks_passed",
+            "checks_failed"
             ]
         table = BeautifulTable(maxwidth=200, precision=32)
         table.columns.header = header_col
@@ -627,6 +700,8 @@ class TS_SLIM:
         data_row = ["talon_slim_status"]
         for idx in range(0,len(self.ts_reg),1):
             data_row = data_row + [f"0x{self.ts_reg[idx]:08X}"]
+        data_row.append( self.checker.get_checks_passed() )
+        data_row.append( self.checker.get_checks_failed() )
         table.rows.append(data_row)
         influx_csv_writer.write_csv(data_row, current_time)
         logging.info(table)

@@ -669,7 +669,23 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
         logging.info(f"100G Ethernet Test Summary - Without Tx FEC Codeword Error Insertion Enabled")
 
     influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
-    data_type = ['measurement','tag','string','string','string','string','string','string','string','long','string','long','long','dateTime:RFC3339']
+    data_type = [
+        'measurement',
+        'tag',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'long',
+        'string',
+        'long',
+        'long',
+        'long',
+        'long',
+        'dateTime:RFC3339']
     influx_csv_writer.write_datatype(data_type)
 
     # Display the 100G Ethernet Core BIST Status
@@ -690,6 +706,8 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
         "Rx parity error",
         "Rx Corrected_CW",
         "Rx UnCorrected_CW",
+        "checks_passed",
+        "checks_failed"
     ]
 
     table = BeautifulTable(maxwidth=200, precision=32)
@@ -712,6 +730,8 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
             + [eth_fec[f"eth{port}__rsfec"].rx_fec_corr_cw_cntr]
             + [eth_fec[f"eth{port}__rsfec"].rx_fec_uncorr_cw_cntr]
             )
+        data_row.append( checker.get_checks_passed() )
+        data_row.append( checker.get_checks_failed() )
         table.rows.append(data_row)
         influx_csv_writer.write_csv(data_row, current_time)
     logging.info(table)

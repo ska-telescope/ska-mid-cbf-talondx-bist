@@ -348,7 +348,7 @@ def length(addr):
     return (addr - start_word_addr)
 
 
-def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, current_time):
+def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, current_time):
     """
     The DDR4 Tester block test checks the DDR4 memory using a configurable
     word pattern. The DDR4 Tester verifies the entire DDR4 memory space by
@@ -454,6 +454,8 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, current_tim
         'string',
         'long',
         'long',
+        'long',
+        'long',
         'dateTime:RFC3339']
     influx_csv_writer.write_datatype(data_type)
 
@@ -467,6 +469,8 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, current_tim
         "Test Status",
         "Error Count",
         "Error Address",
+        "checks_passed",
+        "checks_failed"
     ]
     table = BeautifulTable(maxwidth=200, precision=32)
     table.columns.header = header_col
@@ -484,6 +488,8 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, current_tim
             + [ddr4_tester.read_error_count_reg()]
             + [ddr4_tester.read_error_addr_reg()]
             )
+        data_row.append( checker.get_checks_passed() )
+        data_row.append( checker.get_checks_failed() )
         table.rows.append(data_row)
         influx_csv_writer.write_csv(data_row, current_time)
         idx += 1
@@ -499,7 +505,7 @@ def main(EMIFs, pattern, runtime, regsets, current_time):
     [ddr4_testers] = ddr4_tester_config(EMIFs, regsets, checker)
     ddr4_tester_manual_random_rw_check(ddr4_testers)
     # ddr4_tester_manual_random_rw_check_timed(EMIFs, ddr4_testers, runtime)
-    ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, current_time)
+    ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, current_time)
     checker.report_log(f"DDR4 Tester test results")
     return checker
 
