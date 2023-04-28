@@ -187,14 +187,14 @@ setup_remote_board(){
     fi
     
     #ssh into the board and attempt to verify the files using the onboard script
-    ssh root@$target_talon_board -n "bist -v" 2>&1
+    ssh root@$target_talon_board -n "bist.sh -v" 2>&1
     if [ $? -ne 0 ]; then
         echo "Unable to verify files on the target board: $ret"
         exit 2
     fi
 
     #ssh into the board and setup the bist auto runner
-    ret=$(ssh root@$target_talon_board -n "bist -s" 2>&1)
+    ret=$(ssh root@$target_talon_board -n "bist.sh -s" 2>&1)
     if [ $? -ne 0 ]; then
         echo "Unable to setup systemd services on the target board: $ret"
         exit 3
