@@ -39,6 +39,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
+import datetime
 
 class DDR4_TESTER:
     def __init__(self, regsets, ddr4_tester_name, mem_size, checker) -> None:
@@ -573,4 +574,5 @@ if __name__ == "__main__":
     else:
         logging.error(f"Invalid testcase {testcase}!")
 
-    checker = main(EMIFs, pattern, runtime, regsets)
+    current_time = datetime.datetime.now()
+    checker = main(EMIFs, pattern, runtime, regsets, current_time)

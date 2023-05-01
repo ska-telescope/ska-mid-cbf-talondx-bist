@@ -38,6 +38,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
+import datetime
 
 class TS_Fault:
     def __init__(self, talon_status, name, checker) -> None:
@@ -744,5 +745,6 @@ if __name__ == "__main__":
     #-------------------------------------------------------------------------
     # FPGA module BIST tests:
     #-------------------------------------------------------------------------
-    # Talon Status: check the Talon Status 
-    checker = main(talon_status)   
+    # Talon Status: check the Talon Status
+    current_time = datetime.datetime.now()  
+    checker = main(talon_status, current_time)   

@@ -41,6 +41,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
+import datetime
 
 class ETH_PHY:
     def __init__(self, regsets, eth_phy_name, checker) -> None:
@@ -814,4 +815,5 @@ if __name__ == "__main__":
     else:
         logging.error(f"Invalid testcase {testcase}!")
 
-    checker = main(Eth_100G_IP_cores, eth_phy_loopback_mode, runtime, regsets)    
+    current_time = datetime.datetime.now()
+    checker = main(Eth_100G_IP_cores, eth_phy_loopback_mode, runtime, regsets, current_time)    

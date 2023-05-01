@@ -44,7 +44,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
-
+import datetime
 
 class SLIM_Transceiver_PHY:
     def __init__(self, regsets, tx_name, rx_name, mbo, chan) -> None:
@@ -555,4 +555,5 @@ if __name__ == "__main__":
     else:
         logging.error(f"Invalid testcase {testcase}!")
     
-    checker = main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, runtime, regsets)    
+    current_time = datetime.datetime.now()
+    checker = main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, runtime, regsets, current_time)    
