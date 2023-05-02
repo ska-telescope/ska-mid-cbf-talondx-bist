@@ -18,6 +18,8 @@
 #--------------------------------------------------------------------------------
 import sys
 import yaml
+import datetime
+import os
 
 import logging
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -102,6 +104,11 @@ if __name__ == "__main__":
     #-------------------------------------------------------------------------
     # FPGA module BIST testcases:
     #-------------------------------------------------------------------------
+    currentTime = datetime.datetime.now()
+    if os.path.exists('./tdc_base_bist_logfile.csv'):
+        print("\r\nremoving ./tdc_base_bist_logfile.csv")
+        os.remove('./tdc_base_bist_logfile.csv')
+
     for testcase in testcases:
         print(f"\nRunning Talon-DX FPGA BIST testcase: {testcase}.")
 
@@ -114,53 +121,53 @@ if __name__ == "__main__":
         # Talon Status
         if testcase == "Talon_Status":
             talon_status = regsets.get("talon_status")
-            checker = tdc_base_bist_talon_status.main(talon_status)
+            checker = tdc_base_bist_talon_status.main(talon_status, currentTime)
             checker.report_print(f"Talon Status test results")
 
         # 100G Ethernet (loopback mode: Rx serial (internal))
         if testcase == "100G Ethernet Int_LB":
             eth_phy_loopback_mode = 1
-            checker = tdc_base_bist_ethernet.main(Eth_100G_IP_cores, eth_phy_loopback_mode, Eth_100G_runtime, regsets)
+            checker = tdc_base_bist_ethernet.main(Eth_100G_IP_cores, eth_phy_loopback_mode, Eth_100G_runtime, regsets, currentTime)
             checker.report_print(f"100G Ethernet internal loopback test results")
 
         # 100G Ethernet (loopback mode: external)
         if testcase == "100G Ethernet Ext_LB":
             eth_phy_loopback_mode = 0
-            checker = tdc_base_bist_ethernet.main(Eth_100G_IP_cores, eth_phy_loopback_mode, Eth_100G_runtime, regsets)
+            checker = tdc_base_bist_ethernet.main(Eth_100G_IP_cores, eth_phy_loopback_mode, Eth_100G_runtime, regsets, currentTime)
             checker.report_print(f"100G Ethernet external loopback test results")
 
         # SLIM XCVR (loopback mode: Rx serial (internal))
         if testcase == "SLIM XCVR Int_LB":
             slim_xcvr_phy_loopback_mode = 1
-            checker = tdc_base_bist_slim.main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, slim_runtime, regsets)
+            checker = tdc_base_bist_slim.main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, slim_runtime, regsets, currentTime)
             checker.report_print(f"SLIM internal loopback test results")
 
         # SLIM XCVR (loopback mode: external)
         if testcase == "SLIM XCVR Ext_LB":
             slim_xcvr_phy_loopback_mode = 0
-            checker = tdc_base_bist_slim.main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, slim_runtime, regsets)
+            checker = tdc_base_bist_slim.main(slim_xcvr_phys, slim_xcvr_phy_loopback_mode, slim_runtime, regsets, currentTime)
             checker.report_print(f"SLIM external loopback test results")
 
         # DDR4 EMIF (walking 0 block test: 72-bit 0xFFFFFFFFFFFFFFFFFE pattern)
         if testcase == "DDR4_Walking_0_Pattern":
             pattern = 0 
-            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets)
+            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets, currentTime)
             checker.report_print(f"DDR4 walking 0 block test pattern results")
 
         # DDR4 EMIF (walking 1 block test: 72-bit 0x000000000000000001 pattern)
         if testcase == "DDR4_Walking_1_Pattern":
             pattern = 1
-            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets)
+            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets, currentTime)
             checker.report_print(f"DDR4 walking 1 block test pattern results")
 
         # DDR4 EMIF (alternating A block test: 72-bit 0xAAAAAAAAAAAAAAAAAA pattern)
         if testcase == "DDR4_Alternating_A_Pattern":
             pattern = 2
-            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets)
+            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets, currentTime)
             checker.report_print(f"DDR4 alternating A block test pattern results")
 
         # DDR4 EMIF (alternating 5 block test: 72-bit 0x555555555555555555 pattern)
         if testcase == "DDR4_Alternating_5_Pattern":
             pattern = 3
-            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets)
+            checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets, currentTime)
             checker.report_print(f"DDR4 alternating 5 block test pattern results")

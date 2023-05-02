@@ -187,14 +187,14 @@ setup_remote_board(){
     fi
     
     #ssh into the board and attempt to verify the files using the onboard script
-    ssh root@$target_talon_board -n "bist -v" 2>&1
+    ssh root@$target_talon_board -n "bist.sh -v" 2>&1
     if [ $? -ne 0 ]; then
         echo "Unable to verify files on the target board: $ret"
         exit 2
     fi
 
     #ssh into the board and setup the bist auto runner
-    ret=$(ssh root@$target_talon_board -n "bist -s" 2>&1)
+    ret=$(ssh root@$target_talon_board -n "bist.sh -s" 2>&1)
     if [ $? -ne 0 ]; then
         echo "Unable to setup systemd services on the target board: $ret"
         exit 3
@@ -202,6 +202,33 @@ setup_remote_board(){
 
     echo -e "${GREEN}Target board setup successful. Retart the target board to finish setup.${NC}"
     return 0
+}
+
+check_directory_permissions(){
+
+    echo "Checking directory permissions..."
+
+    paths=("home" "home/root" "home/root/packages" "etc" "etc/systemd" "etc/systemd/system" "bin")
+    permissions=("755" "700" "755" "755" "755" "755" "755")
+    #drwxr-xr-x   root   root   home
+    #drwx------   root   root   root
+    #drwxr-xr-x   root   root   packages
+    #drwxr-xr-x   root   root   etc
+    #drwxr-xr-x   root   root   systemd
+    #drwxr-xr-x   root   root   system
+    #drwxr-xr-x   root   root   bin
+
+    for i in ${!paths[@]}; do
+
+        echo "Checking ./raw/$REPO_NAME/${paths[$i]} for ${permissions[$i]}"
+
+        perm=$(stat -L -c "%a" ./raw/$REPO_NAME/${paths[$i]})
+
+        if [ $perm -ne ${permissions[$i]} ]; then
+            echo -e "${RED}Warning ./raw/$REPO_NAME/${paths[$i]} expected ${permissions[$i]} but got $perm ${NC}"
+        fi
+
+    done
 }
 
 while getopts ":hgc:i:s:n:b:" arg; do
@@ -215,6 +242,7 @@ while getopts ":hgc:i:s:n:b:" arg; do
             overwrite_package_name $pkg_name
             ;;
         g)
+            check_directory_permissions
             generate_local_package
             ;;
         c)

@@ -39,6 +39,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
+import datetime
 
 class DDR4_TESTER:
     def __init__(self, regsets, ddr4_tester_name, mem_size, checker) -> None:
@@ -347,7 +348,8 @@ def length(addr):
     start_word_addr = 0
     return (addr - start_word_addr)
 
-def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern):
+
+def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, current_time):
     """
     The DDR4 Tester block test checks the DDR4 memory using a configurable
     word pattern. The DDR4 Tester verifies the entire DDR4 memory space by
@@ -443,40 +445,60 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern):
         board = idx.get("board")
         emif_list = idx.get("EMIF")
 
+    influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
+    data_type = [
+        'measurement',
+        'tag',
+        'long',
+        'string',
+        'string',
+        'string',
+        'long',
+        'long',
+        'long',
+        'long',
+        'dateTime:RFC3339']
+    influx_csv_writer.write_datatype(data_type)
+
     # Display the DDR4 Tester Block Test BIST Status
     header_col = [
-        "Board",
+        "Register",
         "EMIF",
-        "Memory Size",
+        "Memory Size (GB)",
         "Memory Checked",
         "Test Pattern",
         "Test Status",
         "Error Count",
         "Error Address",
+        "checks_passed",
+        "checks_failed"
     ]
     table = BeautifulTable(maxwidth=200, precision=32)
     table.columns.header = header_col
+    influx_csv_writer.write_header(header_col)
     idx = 0
     for ddr4_tester_name, ddr4_tester in ddr4_testers.items():
-        data_row = []
+        data_row = ['ddr_test']
         data_row = (
             data_row
-            + [board]
             + [f"EMIF_{emif_list[idx]}"]
-            + [f"{ddr4_tester.ddr4_size}GB"]
+            + [f"{ddr4_tester.ddr4_size}"]
             + [f"{ddr4_tester.memory_size_tested(STEP_CNT)}GB ({ddr4_tester.percent_memory_tested(STEP_CNT)}%)"]
             + [ddr4_tester.get_pattern_select_name(pattern)]
             + [ddr4_tester.test_status]
             + [ddr4_tester.read_error_count_reg()]
             + [ddr4_tester.read_error_addr_reg()]
             )
+        data_row.append( checker.get_checks_passed() )
+        data_row.append( checker.get_checks_failed() )
         table.rows.append(data_row)
+        influx_csv_writer.write_csv(data_row, current_time)
         idx += 1
     logging.info(table)
 
 
 
-def main(EMIFs, pattern, runtime, regsets):
+def main(EMIFs, pattern, runtime, regsets, current_time):
     # bist_utils.Date().log_timestamp()
     checker = bist_utils.Checker()
     logging.info(f"#---------------------------------------------------------")
@@ -484,7 +506,7 @@ def main(EMIFs, pattern, runtime, regsets):
     [ddr4_testers] = ddr4_tester_config(EMIFs, regsets, checker)
     ddr4_tester_manual_random_rw_check(ddr4_testers)
     # ddr4_tester_manual_random_rw_check_timed(EMIFs, ddr4_testers, runtime)
-    ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern)
+    ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, current_time)
     checker.report_log(f"DDR4 Tester test results")
     return checker
 
@@ -552,4 +574,5 @@ if __name__ == "__main__":
     else:
         logging.error(f"Invalid testcase {testcase}!")
 
-    checker = main(EMIFs, pattern, runtime, regsets)
+    current_time = datetime.datetime.now()
+    checker = main(EMIFs, pattern, runtime, regsets, current_time)

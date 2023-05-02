@@ -41,6 +41,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
+import datetime
 
 class ETH_PHY:
     def __init__(self, regsets, eth_phy_name, checker) -> None:
@@ -592,7 +593,7 @@ def eth_100G_config(Eth_100G_IP_cores, loopback_mode, regsets, checker):
 
     return [eth_phy, eth_stats, eth_fec, eth_qsfp]
 
-def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores, runtime, rx_loopback_mode,checker):
+def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores, runtime, rx_loopback_mode,checker, current_time):
     """100G Ethernet
        Checks if the received Reed-Solomon FEC codewords are corrected and display
        a summary of the various Ethernet parameters checked in tabular format."""
@@ -668,12 +669,32 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
     else:
         logging.info(f"100G Ethernet Test Summary - Without Tx FEC Codeword Error Insertion Enabled")
 
+    influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
+    data_type = [
+        'measurement',
+        'tag',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'string',
+        'long',
+        'string',
+        'long',
+        'long',
+        'long',
+        'long',
+        'dateTime:RFC3339']
+    influx_csv_writer.write_datatype(data_type)
+
     # Display the 100G Ethernet Core BIST Status
     # Loopback: 0x0 = external, 0xF = Rx serial (internal)
     # Clock Data Recovery (CDR): 0x0 = False, 0xF = True
     # Reed-Solom FEC: Rx corrected and uncorrected codewords
     header_col = [
-        "Board",
+        "Register",
         "PHY",
         "QSFP pres",
         "QSFP LP mode",
@@ -686,15 +707,17 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
         "Rx parity error",
         "Rx Corrected_CW",
         "Rx UnCorrected_CW",
+        "checks_passed",
+        "checks_failed"
     ]
 
     table = BeautifulTable(maxwidth=200, precision=32)
     table.columns.header = header_col
+    influx_csv_writer.write_header(header_col)
     for port in eth_port_list:
-        data_row = []
+        data_row = ["phy_status"]
         data_row = (
             data_row
-            + [board]
             + [f"eth{port}"]
             + [eth_qsfp[f"eth{port}__qsfp"].read_qsfp_mod_prs_n_reg()]
             + [eth_qsfp[f"eth{port}__qsfp"].read_qsfp_low_power_mode_reg()]
@@ -708,23 +731,26 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
             + [eth_fec[f"eth{port}__rsfec"].rx_fec_corr_cw_cntr]
             + [eth_fec[f"eth{port}__rsfec"].rx_fec_uncorr_cw_cntr]
             )
+        data_row.append( checker.get_checks_passed() )
+        data_row.append( checker.get_checks_failed() )
         table.rows.append(data_row)
+        influx_csv_writer.write_csv(data_row, current_time)
     logging.info(table)
 
 
-def main(Eth_100G_IP_cores, eth_phy_loopback_mode, runtime, regsets):
+def main(Eth_100G_IP_cores, eth_phy_loopback_mode, runtime, regsets, current_time):
     # bist_utils.Date().log_timestamp()
     checker = bist_utils.Checker()
     logging.info(f"#---------------------------------------------------------")
     logging.info(f"Talon-DX FPGA BIST testcase: 100G Ethernet")
     # check the Ethernet PHY link status using RS-FEC codeword correction
     [eth_phy, stats, eth_fec, eth_qsfp] = eth_100G_config(Eth_100G_IP_cores, eth_phy_loopback_mode, regsets, checker)
-    eth_100G_error_test(eth_phy, stats, eth_fec, eth_qsfp, Eth_100G_IP_cores, runtime, eth_phy_loopback_mode, checker)
+    eth_100G_error_test(eth_phy, stats, eth_fec, eth_qsfp, Eth_100G_IP_cores, runtime, eth_phy_loopback_mode, checker, current_time)
     checker.report_log(f"100G Ethernet loopback test results")
     # repeat test without FEC codeword error insertion
     for fec_name, fec in eth_fec.items():
         fec.enable_fec_tx_error_insertion_all(False)
-    eth_100G_error_test(eth_phy, stats, eth_fec, eth_qsfp, Eth_100G_IP_cores, runtime, eth_phy_loopback_mode, checker)
+    eth_100G_error_test(eth_phy, stats, eth_fec, eth_qsfp, Eth_100G_IP_cores, runtime, eth_phy_loopback_mode, checker, current_time)
     checker.report_log(f"100G Ethernet loopback test results")
     # disable various test configuration parameters, could be connected to a network:
     for qsfp_name, qsfp in eth_qsfp.items():
@@ -789,4 +815,5 @@ if __name__ == "__main__":
     else:
         logging.error(f"Invalid testcase {testcase}!")
 
-    checker = main(Eth_100G_IP_cores, eth_phy_loopback_mode, runtime, regsets)    
+    current_time = datetime.datetime.now()
+    checker = main(Eth_100G_IP_cores, eth_phy_loopback_mode, runtime, regsets, current_time)    

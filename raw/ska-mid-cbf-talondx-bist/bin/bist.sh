@@ -2,17 +2,17 @@
 
 usage() {
     echo "Usage:"
-    echo -e "-s             Start the BIST systemd service and extract tar file"
-    echo -e "-k             Kill the BIST systemd service immediately, aborting the BIST"
-    echo -e "-r             Run the BIST"
-    echo -e "-m <time>      Modify the BIST systemd start delay time by <time>"
-    echo -e "-t             Show the current BIST systemd start delay time"
-    echo -e "-p             Program the BIST bitstream"
-    echo -e "-x             Extract the tar file at predefined location"
-    echo -e "-f             Publish the results (.csv) of the BIST to influxdb"
-    echo -e "-c             Print the results (.log) of the BIST"
-    echo -e "-h             Display the help message"
-    echo -e "-v             Verify the BIST files are installed correctly"
+    echo "-s             Start the BIST systemd service and extract tar file"
+    echo "-k             Kill the BIST systemd service immediately, aborting the BIST"
+    echo "-r             Run the BIST"
+    echo "-m <time>      Modify the BIST systemd start delay time by <time>"
+    echo "-t             Show the current BIST systemd start delay time"
+    echo "-p             Program the BIST bitstream"
+    echo "-x             Extract the tar file at predefined location"
+    echo "-f             Publish the results (.csv) of the BIST to influxdb"
+    echo "-c             Print the results (.txt) of the BIST"
+    echo "-h             Display the help message"
+    echo "-v             Verify the BIST files are installed correctly"
 }
 
 # path of the BIST source files
@@ -24,7 +24,7 @@ BIST_SERVICE_PATH="/etc/systemd/system"
 # list of systemd service files
 BIST_SERVICE_FILES="bist.service bist.timer"
 # path of the BIST bitstream archive
-BIST_ARCHIVE=$BIST_SRC_PATH/*.tar.gz
+BIST_ARCHIVE=$BIST_SRC_PATH/talon_dx-tdc_base-tdc_bist.tar.gz
 # path of the BIST bitstream for programming to trigger the overlay
 BIST_BITSTREAM_PATH="/sys/kernel/config/device-tree/overlays"
 # path of the BIST bitstream package is extracted
@@ -96,14 +96,22 @@ extract_archive() {
     # tar command on the Talon boards is from Busybox and 
     # has a limited set of command. tar options such as --get and --wildcards 
     # does not exist.
-    echo "Extracting files from tar to $BIST_ARCHIVE_PATH"
-    # remove the output directory if it exists
-    if [ -d "$BIST_ARCHIVE_PATH" ]; then
-        echo "Deleting previous tar file output directory"
-        rm -rf $BIST_ARCHIVE_PATH
+    echo "Extracting files from $BIST_ARCHIVE to $BIST_ARCHIVE_PATH"
+    if [ -f $BIST_ARCHIVE ]; then
+
+        # remove the output directory if it exists
+        if [ -d "$BIST_ARCHIVE_PATH" ]; then
+            echo "Deleting previous tar file output directory"
+            rm -rf $BIST_ARCHIVE_PATH
+        fi
+
+        mkdir $BIST_ARCHIVE_PATH
+        tar -xvzf $BIST_ARCHIVE -C $BIST_ARCHIVE_PATH
+
+    else
+        echo "$BIST_ARCHIVE not found, aborting..."
+        exit 3
     fi
-    mkdir $BIST_ARCHIVE_PATH
-    tar -xvzf $BIST_ARCHIVE -C $BIST_ARCHIVE_PATH
 }
 
 program_bist_bitstream() {
@@ -115,10 +123,19 @@ program_bist_bitstream() {
     # sanity check
     if [ -z "$dtb" ] || [ -z "$bs_core" ]; then
         echo ".dtb or .rbf file(s) missing. Aborting bitstream programming!"
-    else 
+        exit 3
+    else
+        echo "Using $bs_core and $dtb"
         rmdir $BIST_BITSTREAM_PATH/*
         mkdir $BIST_BITSTREAM_PATH/base
-        echo $BIST_ARCHIVE_PATH/$dtb > $BIST_BITSTREAM_PATH/base/path
+        # copy the files over to the tempfs 
+        cp $dtb /lib/firmware
+        cp $bs_core /lib/firmware
+        # grab the basename of the target files
+        target_dtb=`basename $dtb`
+        target_bs_core=`basename $bs_core`
+        # move to the directory in a new shell and write the overlay
+        (cd /lib/firmware && echo $target_dtb > $BIST_BITSTREAM_PATH/base/path)
         dmesg | tail -n 10
     fi
 }
@@ -133,7 +150,9 @@ execute_bist() {
         echo "ipmap or json file(s) missing. Aborting BIST execution!"
         exit 1
     else
-        python3 $BIST_SRC_PATH/run_bist_tests.py $BIST_ARCHIVE_PATH/$json $BIST_SRC_PATH/$ipmap
+        echo "Using $json and $ipmap"
+        # run in a new shell
+        (cd $BIST_SRC_PATH/src; python3 $BIST_SRC_PATH/src/run_bist_tests.py $json $ipmap)
     fi
 }
 
@@ -149,11 +168,11 @@ run_bist() {
 
 get_bist_results() {
     # print the results of the BIST
-    if [ -f $BIST_SRC_PATH/tdc_base_bist_logfile.log ]; then
-        echo $BIST_SRC_PATH/tdc_base_bist_logfile.log
+    if [ -f $BIST_SRC_PATH/src/tdc_base_bist_logfile.txt ]; then
+        less $BIST_SRC_PATH/src/tdc_base_bist_logfile.txt
         return 0
     else
-        echo "$BIST_SRC_PATH/tdc_base_bist_logfile.log not found"
+        echo "$BIST_SRC_PATH/src/tdc_base_bist_logfile.txt not found"
         exit 1
     fi
 }
@@ -161,11 +180,12 @@ get_bist_results() {
 publish_bist_results_to_influxdb() {
     # publish the results to the influxdb. The python script that runs
     # the BIST is responsible for producing a valid .csv file
-    if [ -f $BIST_SRC_PATH/tdc_base_bist_logfile.csv ]; then
-        echo "Publishing $BIST_SRC_PATH/tdc_base_bist_logfile.csv to influxdb"
-        influx write --bucket bist --file $BIST_SRC_PATH/tdc_base_bist_logfile.csv
+    if [ -f $BIST_SRC_PATH/src/tdc_base_bist_logfile.csv ]; then
+        echo "Publishing $BIST_SRC_PATH/src/tdc_base_bist_logfile.csv to influxdb"
+        influx write --bucket bist --file $BIST_SRC_PATH/src/tdc_base_bist_logfile.csv
         return 0
     else 
+        echo "$BIST_SRC_PATH/src/tdc_base_bist_logfile.csv not found."
         exit 1
     fi
 }
@@ -193,7 +213,7 @@ while getopts ":hskrm:vtpxfc" arg; do
         s)
             start_bist_service
             if [ $? -ne 0 ]; then
-                echo "Error starting the BIST service - $status"
+                echo "Error starting the BIST service"
                 exit 5
             fi
             # also extract the bitstream
@@ -201,8 +221,8 @@ while getopts ":hskrm:vtpxfc" arg; do
             ;;
         k)
             stop_bist_service
-            if [ $? -gt 0 ]; then
-                echo "Error killing the BIST service - $status"
+            if [ $? -ne 0 ]; then
+                echo "Error killing the BIST service"
                 exit 4
             fi
             ;;
