@@ -61,7 +61,7 @@ class DDR4_TESTER:
         # VER_ID: bits[31:0]
         # DDR4 tester instance version identifier register
         id_reg = self.ddr4_tester.read_field("ver_id")
-        self.checker.check(id_reg == 0xFF140423, f"{self.ddr4_tester_name} VER_ID: 0x{id_reg:08X}")
+        self.checker.check(id_reg == 0xFF270423, f"{self.ddr4_tester_name} VER_ID: 0x{id_reg:08X}")
 
     def reset(self, val=False):
         # Reset: bits[0]:
