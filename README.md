@@ -156,7 +156,7 @@ The remaining time before the BIST is run can be polled:
 systemctl list-timer --all
 ```
 
-The `-v` option verifies that the bitstream files and the service files are placed (unpacked) at the correct location.
+The `-v` option verifies that the bitstream files and the service files are placed (unpacked) at the correct location. It also verifies the BIST influxdb bucket is started. If it is not, it will automatically create it.
 
 The `-r` option runs the bist. Note that the systemd `bist.service` uses this same script to run the BIST after the required bootup delay.
 
@@ -164,7 +164,7 @@ The `-x` option extracts the BIST bitstream related package (.tar.gz) at a prede
 
 The `-c` option prints the results (.txt) of the most recent BIST to the screen with $cat command. 
 
-The `-f` publishes the results of the most recent BIST output (.csv) to the influxdb database. It publishes the results via the influx CLI and requires the bucket named `talon` to exist on the target and the influxdb credentials are already setup on the board.
+The `-f` publishes the results of the most recent BIST output (.csv) to the influxdb database. It publishes the results via the influx CLI and requires the bucket named `bist` to exist on the target and the influxdb credentials are already setup on the board.
 
 # Releasing into CAR
 ## Testing

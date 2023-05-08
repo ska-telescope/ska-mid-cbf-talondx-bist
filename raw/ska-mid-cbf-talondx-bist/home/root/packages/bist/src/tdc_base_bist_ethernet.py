@@ -711,11 +711,18 @@ def eth_100G_error_test(eth_phy, eth_stats, eth_fec, eth_qsfp, Eth_100G_IP_cores
         "checks_failed"
     ]
 
+    reg_name=""
     table = BeautifulTable(maxwidth=200, precision=32)
     table.columns.header = header_col
     influx_csv_writer.write_header(header_col)
     for port in eth_port_list:
-        data_row = ["phy_status"]
+
+        if eth_fec[f"eth{port}__rsfec"].read_fec_tx_error_insertion_all_reg():
+            reg_name = "phy_status_fec"
+        else:
+            reg_name = "phy_status"
+
+        data_row = [reg_name]    
         data_row = (
             data_row
             + [f"eth{port}"]

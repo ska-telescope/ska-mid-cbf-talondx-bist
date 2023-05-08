@@ -414,7 +414,7 @@ def slim_bert(xcvr_phy, slim_xcvr_phys, runtime, rx_loopback_mode, checker, curr
         'measurement',
         'tag',
         'tag',
-        'long',
+        'tag',
         'long',
         'string',
         'string',

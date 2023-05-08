@@ -208,6 +208,11 @@ modify_bist_start_delay() {
     fi
 }
 
+create_influxdb_bist_bucket(){
+    influx bucket create --name bist -r 7d --description "bucket for storing the results of the BIST"
+    return $?
+}
+
 while getopts ":hskrm:vtpxfc" arg; do
     case $arg in
         s)
@@ -249,6 +254,13 @@ while getopts ":hskrm:vtpxfc" arg; do
             if [ $? -ne 0 ]; then
                 exit 1
             fi
+
+            influx bucket ls --name bist
+            if [ $? -ne 0 ]; then
+                echo "Creating the bist bucket..."
+                create_influxdb_bist_bucket
+            fi
+            
             ;;
         p)
             program_bist_bitstream
