@@ -20,6 +20,7 @@ import sys
 import yaml
 import datetime
 import os
+import subprocess
 
 import logging
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -105,9 +106,11 @@ if __name__ == "__main__":
     # FPGA module BIST testcases:
     #-------------------------------------------------------------------------
     currentTime = datetime.datetime.now()
-    if os.path.exists('./tdc_base_bist_logfile.csv'):
-        print("\r\nremoving ./tdc_base_bist_logfile.csv")
-        os.remove('./tdc_base_bist_logfile.csv')
+    # create a fresh instance of the csv file each time the BIST is executed
+    csv_file_name='tdc_base_bist_logfile.csv'
+    if os.path.exists(f'./{csv_file_name}'):
+        print(f'Removing ./{csv_file_name}')
+        os.remove(f'./{csv_file_name}')
 
     for testcase in testcases:
         print(f"\nRunning Talon-DX FPGA BIST testcase: {testcase}.")
@@ -171,3 +174,6 @@ if __name__ == "__main__":
             pattern = 3
             checker = tdc_base_bist_ddr4.main(DDR4_EMIFs, pattern, DDR4_runtime, regsets, currentTime)
             checker.report_print(f"DDR4 alternating 5 block test pattern results")
+
+    # Attempt to publish the results to the database via the external /bin/bist.sh script
+    subprocess.run(["bist.sh", "-f"])

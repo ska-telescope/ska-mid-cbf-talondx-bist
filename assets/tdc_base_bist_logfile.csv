@@ -1,0 +1,60 @@
+
+#datatype measurement,boolean,boolean,boolean,boolean,boolean,boolean,boolean,boolean,boolean,boolean,string,long,long,dateTime:RFC3339
+Register,SysClk,PLL,FS PLL,COMMS PLL,EMIF BL,EMIF BR,EMIF TR,ETH0 PLL,ETH1 PLL,SLIM PLLs,Non Zero,checks_passed,checks_failed
+talon_fault_status,False,False,False,False,False,False,False,False,False,False,0x30,11,0,2023-05-08T20:35:55Z
+
+#datatype measurement,double,double,double,double,boolean,boolean,boolean,long,long,dateTime:RFC3339
+Register,Base Clk (MHz),EMIF BL Clk (MHz),EMIF BR Clk (MHz),EMIF TR Clk (MHz),PLL Locked,FS PLL Locked,Comms PLL Locked,checks_passed,checks_failed
+talon_clock_status,125.001242,333.337794,333.337795,333.337794,True,True,True,21,0,2023-05-08T20:35:55Z
+
+#datatype measurement,tag,boolean,boolean,boolean,boolean,boolean,long,long,dateTime:RFC3339
+Register,EMIF,PLL Locked,Reset Done,Cal Success,Cal Fail,AMM Ready,checks_passed,checks_failed
+talon_emif_status,EMIF0,True,True,True,False,True,51,0,2023-05-08T20:35:55Z
+talon_emif_status,EMIF1,True,True,True,False,True,51,0,2023-05-08T20:35:55Z
+talon_emif_status,EMIF2,True,True,True,False,True,51,0,2023-05-08T20:35:55Z
+
+#datatype measurement,tag,boolean,boolean,boolean,boolean,long,long,dateTime:RFC3339
+Register,E100G,Main PLL Locked,Main PLL Cal Busy,Buffer PLL Locked,Buffer PLL Cal Busy,checks_passed,checks_failed
+talon_e100g_status,E100G0,True,False,True,False,67,0,2023-05-08T20:35:55Z
+talon_e100g_status,E100G1,True,False,True,False,67,0,2023-05-08T20:35:55Z
+
+#datatype measurement,string,string,string,string,string,string,long,long,dateTime:RFC3339
+Register,Present (LSW),Present (MSW),PLL Locked (LSW),PLL Locked (MSW),PLL Cal Busy (LSW),PLL Cal Busy (MSW),checks_passed,checks_failed
+talon_slim_status,0x0FFFFFFF,0x00000000,0x0FFFFFFF,0x00000000,0x00000000,0x00000000,75,0,2023-05-08T20:35:55Z
+
+#datatype measurement,tag,tag,tag,long,string,string,string,string,string,long,long,long,long,long,string,long,long,datetime:RFC3339
+Register,LEAP,MBO,Chan,Rate (Gbps),Loopback,CDR Lost,CDR,BA Lost,BA,Tx Data Words,Tx Idle Words,Rx Data Words,Rx Idle Words,Rx Idle Errors,Estimated BER,checks_passed,checks_failed
+talon_ber_status,1,1,0,25,True,False,True,False,True,0,1000715978,0,1000702705,0,1.665e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,1,25,True,False,True,False,True,0,1000958952,0,1000960817,0,1.665e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,2,25,True,False,True,False,True,0,1001065221,0,1001075242,0,1.665e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,3,25,True,False,True,False,True,0,1001194134,0,1001196416,0,1.665e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,4,25,True,False,True,False,True,0,1001301396,0,1001302398,0,1.664e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,5,25,True,False,True,False,True,0,1001403287,0,1001400607,0,1.664e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,6,25,True,False,True,False,True,0,1001503287,0,1001500632,0,1.664e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,7,25,True,False,True,False,True,0,1001599792,0,1001595944,0,1.664e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,8,25,True,False,True,False,True,0,1001694516,0,1001697191,0,1.664e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,9,25,True,False,True,False,True,0,1001816660,0,1001816001,0,1.664e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,10,25,True,False,True,False,True,0,1001926015,0,1001916521,0,1.663e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,1,1,11,25,True,False,True,False,True,0,1002018615,0,1002022298,0,1.663e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,0,25,True,False,True,False,True,0,1002118042,0,1002115468,0,1.663e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,1,25,True,False,True,False,True,0,1002226917,0,1002224839,0,1.663e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,2,25,True,False,True,False,True,0,1002319943,0,1002321900,0,1.663e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,3,25,True,False,True,False,True,0,1002425855,0,1002417248,0,1.663e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,4,25,True,False,True,False,True,0,1002526277,0,1002523955,0,1.662e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,5,25,True,False,True,False,True,0,1002618600,0,1002622071,0,1.662e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,6,25,True,False,True,False,True,0,1002723099,0,1002719778,0,1.662e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,7,25,True,False,True,False,True,0,1002821984,0,1002820100,0,1.662e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,8,25,True,False,True,False,True,0,1002913315,0,1002915907,0,1.662e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,9,25,True,False,True,False,True,0,1003019903,0,1003017155,0,1.662e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,10,25,True,False,True,False,True,0,1003118727,0,1003114746,0,1.661e-11,24,0,2023-05-08T20:35:55Z
+talon_ber_status,2,2,11,25,True,False,True,False,True,0,1003213650,0,1003211367,0,1.661e-11,24,0,2023-05-08T20:35:55Z
+
+#datatype measurement,tag,string,string,string,string,string,string,string,long,string,long,long,long,long,dateTime:RFC3339
+Register,PHY,QSFP pres,QSFP LP mode,Loopback,Wordlock,Freqlock,Frame error,Tx CW errors,Rx FCS error,Rx parity error,Rx Corrected_CW,Rx UnCorrected_CW,checks_passed,checks_failed
+phy_status_fec,eth0,True,True,0xf,0xfffff,0xf,0x0,True,0,False,19581214,0,20,0,2023-05-08T20:35:55Z
+phy_status_fec,eth1,True,True,0xf,0xfffff,0xf,0x0,True,0,False,19585570,0,20,0,2023-05-08T20:35:55Z
+
+#datatype measurement,tag,string,string,string,string,string,string,string,long,string,long,long,long,long,dateTime:RFC3339
+Register,PHY,QSFP pres,QSFP LP mode,Loopback,Wordlock,Freqlock,Frame error,Tx CW errors,Rx FCS error,Rx parity error,Rx Corrected_CW,Rx UnCorrected_CW,checks_passed,checks_failed
+phy_status,eth0,True,True,0xf,0xfffff,0xf,0x0,False,0,False,0,0,22,0,2023-05-08T20:35:55Z
+phy_status,eth1,True,True,0xf,0xfffff,0xf,0x0,False,0,False,0,0,22,0,2023-05-08T20:35:55Z
