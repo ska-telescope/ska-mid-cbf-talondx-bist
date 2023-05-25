@@ -191,7 +191,7 @@ class ETH_PHY:
         self.checker.check(
             (phy_clk_passed > 0 and phy_clk_failed == 0),
             f"PHY_CLK status: checks passed: {phy_clk_passed}, checks failed: {phy_clk_failed}",
-            True,
+            # True,
             )
 
     def read_phy_frame_error_reg(self):
