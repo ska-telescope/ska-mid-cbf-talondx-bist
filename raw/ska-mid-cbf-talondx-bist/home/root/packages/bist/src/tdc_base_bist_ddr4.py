@@ -39,6 +39,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 import bist_utils
+import tdc_base_bist_talon_status
 import datetime
 
 class DDR4_TESTER:
@@ -428,7 +429,7 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, cu
                         last = current
                         current = length(ddr4_tester.read_current_rd_addr_reg())
                         pbar.update(current - last)
-                        time.sleep(0.5)
+                    time.sleep(0.5)
                 if f"{ddr4_tester.ddr4_tester_name}" == "ddr4_tester_TR":
                     last = current
                     current = length(ddr4_tester.read_current_rd_addr_reg())
@@ -500,6 +501,21 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, cu
 
 def main(EMIFs, pattern, runtime, regsets, current_time):
     # bist_utils.Date().log_timestamp()
+    logging.info(f"Check EMIF fault status before performing DDR4 tests ...")
+    # update EMIF list based on the Talon EMIF fault status, skip test if a fault is detected
+    talon_status = regsets.get("talon_status")
+    ts_checker = bist_utils.Checker()
+    talon_fault_status = tdc_base_bist_talon_status.get_talon_fault_status(talon_status, ts_checker)
+    emif_fault_status = [talon_fault_status[6], talon_fault_status[4], talon_fault_status[5]]  # "EMIF": ['TR', 'BL', 'BR'],
+    emif_list = []
+    mem_size_list = []
+    for idx in range(0, len(emif_fault_status), 1):
+        if emif_fault_status[idx] == False:
+            emif_list.append(EMIFs[0]['EMIF'][idx])
+            mem_size_list.append(EMIFs[0]['SIZE'][idx])
+    EMIFs[0]['EMIF'] = emif_list
+    EMIFs[0]['SIZE'] = mem_size_list
+
     checker = bist_utils.Checker()
     logging.info(f"#---------------------------------------------------------")
     logging.info(f"Talon-DX FPGA BIST testcase: DDR4")

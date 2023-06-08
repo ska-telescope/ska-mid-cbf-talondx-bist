@@ -131,6 +131,8 @@ class TS_Fault:
         self.checker.check(ts_reg >= (2**5+2**4), f"{self.ts_name} non_zero: 0x{ts_reg:02X}")
         self.ts_reg = self.ts_reg + [f"0x{ts_reg:02X}"]
 
+        return self.ts_reg
+
     def talon_fault_status_table(self, current_time):
         logging.info(f"Talon Fault Status Summary")
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
@@ -183,6 +185,10 @@ def talon_fault_status(talon_status,checker, current_time):
     fault = TS_Fault(talon_status, f"talon_fault_status", checker)
     fault.check_talon_fault_status()
     fault.talon_fault_status_table(current_time)
+
+def get_talon_fault_status(talon_status, checker):
+    fault = TS_Fault(talon_status, f"talon_fault_status", checker)
+    return fault.check_talon_fault_status()
 
 
 class TS_Clock:
@@ -419,6 +425,7 @@ class TS_EMIF:
 
     def talon_emif_status_table(self, current_time):
         logging.info(f"Talon EMIF Status Summary")
+        emif_list = ["BL", "BR", "TR"]
         influx_csv_writer = bist_utils.influx_csv('tdc_base_bist_logfile.csv')
         data_type = [
             'measurement',
@@ -448,7 +455,7 @@ class TS_EMIF:
         influx_csv_writer.write_header(header_col)
         for emif in range(0,self.repeat,1):
             data_row = ["talon_emif_status"]
-            data_row = data_row + [f"EMIF{emif}"]
+            data_row = data_row + [f"EMIF {emif_list[emif]}"]
             for idx in range(0,len(self.ts_reg[emif]),1):
                 data_row = data_row + [f"{self.ts_reg[emif][idx]}"]
             data_row.append( self.checker.get_checks_passed() )
