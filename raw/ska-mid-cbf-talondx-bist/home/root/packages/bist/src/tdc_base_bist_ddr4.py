@@ -497,16 +497,43 @@ def ddr4_tester_block_pattern_rw_check(EMIFs, ddr4_testers, pattern, checker, cu
         idx += 1
     logging.info(table)
 
+def talon_emif_fault_check_and_reset(ts_fault, ts_emif):
+    LOOP_CNT = 2**2
+
+    emif_fault_map = ["BL", "BR", "TR"]
+    emif_fault_status = ts_fault.get_talon_emif_fault_status()  # "EMIF": ['BL', 'BR', 'TR',],    
+    for emif in range(len(emif_fault_status)):
+        for lc in range(LOOP_CNT):
+            if emif_fault_status[emif] == True:
+                print(f"EMIF_{emif_fault_map[emif]} fault: resetting EMIF_{emif_fault_map[emif]}")
+                ts_emif.emif_reset(1, emif)
+                ts_emif.emif_reset(0, emif)
+                time.sleep(2.5)  # allow 256 GB EMIF reset to complete
+            ts_emif.emif_reset_done_trn_clr(emif)
+            time.sleep(1.0)  # allow time for fault and EMIF calibration status to update
+            fault_status = ts_fault.get_talon_emif_fault_status()  
+            cal_success = ts_emif.get_talon_emif_cal_success(emif)
+            cal_fail = ts_emif.get_talon_emif_cal_fail(emif)
+            if ((not fault_status[emif]) and cal_success and (not cal_fail)):
+                logging.info(f"EMIF_{emif_fault_map[emif]} passed calibration.")
+                break
+            else:
+                logging.info(f"EMIF_{emif_fault_map[emif]} calibration fault.")
 
 
 def main(EMIFs, pattern, runtime, regsets, current_time):
     # bist_utils.Date().log_timestamp()
     logging.info(f"Check EMIF fault status before performing DDR4 tests ...")
-    # update EMIF list based on the Talon EMIF fault status, skip test if a fault is detected
     talon_status = regsets.get("talon_status")
     ts_checker = bist_utils.Checker()
-    talon_fault_status = tdc_base_bist_talon_status.get_talon_fault_status(talon_status, ts_checker)
-    emif_fault_status = [talon_fault_status[6], talon_fault_status[4], talon_fault_status[5]]  # "EMIF": ['TR', 'BL', 'BR'],
+    ts_fault = tdc_base_bist_talon_status.TS_Fault(talon_status, f"talon_fault_status", ts_checker)
+    ts_emif = tdc_base_bist_talon_status.TS_EMIF(talon_status, f"talon_emif_status", ts_checker)
+    # check EMIF calibration status, attempt reset/recovery if fault present 
+    talon_emif_fault_check_and_reset(ts_fault, ts_emif) 
+    # update EMIF list based on the Talon EMIF fault status, skip test if a fault is detected
+    emif_fault_status = ts_fault.get_talon_emif_fault_status()  # "EMIF": ['BL', 'BR', 'TR'],
+    # reorder EMIF status list
+    emif_fault_status = [emif_fault_status[2], emif_fault_status[0], emif_fault_status[1]] # "EMIF": ['TR', 'BL', 'BR'],
     emif_list = []
     mem_size_list = []
     for idx in range(0, len(emif_fault_status), 1):

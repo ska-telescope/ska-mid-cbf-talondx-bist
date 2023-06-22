@@ -181,14 +181,23 @@ class TS_Fault:
         influx_csv_writer.write_csv(data_row, current_time)
         logging.info(table)
 
+    def get_talon_emif_fault_status(self):
+        emif_fault = []
+        # EMIF Bottom Left Fault: bits[0]
+        ts_reg = self.ts_fault.read_field("emif_bl_fault")
+        emif_fault = emif_fault + [ts_reg]
+        # EMIF Bottom Right Fault: bits[0]
+        ts_reg = self.ts_fault.read_field("emif_br_fault")
+        emif_fault = emif_fault + [ts_reg]
+        # EMIF Top Right Fault: bits[0]
+        ts_reg = self.ts_fault.read_field("emif_tr_fault")
+        emif_fault = emif_fault + [ts_reg]
+        return emif_fault
+
 def talon_fault_status(talon_status,checker, current_time):
     fault = TS_Fault(talon_status, f"talon_fault_status", checker)
     fault.check_talon_fault_status()
     fault.talon_fault_status_table(current_time)
-
-def get_talon_fault_status(talon_status, checker):
-    fault = TS_Fault(talon_status, f"talon_fault_status", checker)
-    return fault.check_talon_fault_status()
 
 
 class TS_Clock:
@@ -346,6 +355,35 @@ class TS_EMIF:
             # Asserts the local_reset_req signal to the EMIF to restart 
             # calibration. SW must write a '1' followed by a '0' to restart calibration.
             self.ts_emif.write_field("emif_reset", emif_no, val)
+
+    def emif_reset_done_rd(self, idx):
+            # Returns the state of the local_reset_done signal from the EMIF.
+            return self.ts_emif.read_field("emif_local_reset_done", idx)
+
+    def emif_reset_done_trn_rd(self, idx):
+            # Local Reset Done Transition: bits[0]
+            # Indicates a transition of the local_reset_done signal from the EMIF.
+            return self.ts_emif.read_field("emif_local_reset_done_trn", idx)
+
+    def emif_reset_done_trn_clr(self, idx):
+            # Local Reset Done Transition: bits[0]
+            # Indicates a transition of the local_reset_done signal from the EMIF.
+            # Cleared by writing a '1' to this status bit.
+            self.ts_emif.write_field("emif_local_reset_done_trn", 1, idx)
+
+    def get_talon_emif_cal_success(self, idx):
+            # Local Cal Success: bits[0]
+            # Returns the state of the local_cal_success signal from the EMIF.
+            # Should normally be True.
+            return self.ts_emif.read_field("emif_local_cal_success", idx)
+
+    def get_talon_emif_cal_fail(self, idx):
+            # Local Cal Fail: bits[0]
+            # Returns the state of the local_cal_fail signal from the EMIF.
+            # Indicates a fault with the interface to the DDR4 DIMM module.
+            # Should normally be False.
+            return self.ts_emif.read_field("emif_local_cal_fail", idx)
+
     def check_talon_emif_status(self):
         for idx in range(0,self.repeat,1):
 
