@@ -159,9 +159,9 @@ class TS_Fault:
             "PLL",
             "FS PLL",
             "COMMS PLL",
-            "EMIF BL",
-            "EMIF BR",
-            "EMIF TR",
+            "EMIF0 BL",
+            "EMIF1 BR",
+            "EMIF2 TR",
             "ETH0 PLL",
             "ETH1 PLL",
             "SLIM PLLs",
@@ -315,9 +315,9 @@ class TS_Clock:
         header_col = [ 
             "Register",
             "Base Clk (MHz)",
-            "EMIF BL Clk (MHz)",
-            "EMIF BR Clk (MHz)",
-            "EMIF TR Clk (MHz)",
+            "EMIF0 BL Clk (MHz)",
+            "EMIF1 BR Clk (MHz)",
+            "EMIF2 TR Clk (MHz)",
             "PLL Locked",
             "FS PLL Locked",
             "Comms PLL Locked",
@@ -493,7 +493,7 @@ class TS_EMIF:
         influx_csv_writer.write_header(header_col)
         for emif in range(0,self.repeat,1):
             data_row = ["talon_emif_status"]
-            data_row = data_row + [f"EMIF {emif_list[emif]}"]
+            data_row = data_row + [f"EMIF{emif} {emif_list[emif]}"]
             for idx in range(0,len(self.ts_reg[emif]),1):
                 data_row = data_row + [f"{self.ts_reg[emif][idx]}"]
             data_row.append( self.checker.get_checks_passed() )
