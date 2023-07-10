@@ -59,6 +59,10 @@ generate_local_package(){
     fi
     
     if [ -d ./raw/$REPO_NAME ]; then
+
+        echo "Echoing the version from .release into raw/$REPO_NAME/home/root/pacakges/bist/version.txt"
+        cat .release >  raw/$REPO_NAME/home/root/packages/bist/version.txt
+
         # move to folder, generate the package and move back
         # the --user and --owner makes sure tar does not preserve the owner (GNU tar)
         cd ./raw/$REPO_NAME/ \
